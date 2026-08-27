@@ -25,8 +25,9 @@ The public Better Proposals API documents proposal creation and proposal-status 
 
 For that reason, this POC follows a safe and supportable boundary:
 
-- Automated: account discovery, merge-tag mapping, and draft creation.
-- Manual in Better Proposals: request approval, JG review, and Send Document.
+- Automated: account discovery, merge-tag mapping, draft creation, and an on-page content preview.
+- Recorded in this page: JG's internal review decision and notes, stored in the current browser only.
+- Manual in Better Proposals: native request approval, native Manager Approval, and Send Document.
 - Automated later: status events back to GoHighLevel using Zapier triggers or polling.
 
 This boundary also satisfies the brief's requirement that no proposal be sent without human approval.
@@ -65,11 +66,12 @@ http://localhost:8787
 
 Then:
 
-1. Select `Load sample intake and proposal`.
+1. Select `Fill form with dummy data`.
 2. Select `Test connection and discover account`.
 3. Choose the mock template.
 4. Check the three release confirmations.
 5. Select `Create Better Proposals draft`.
+6. Review the on-page content preview and record a test JG review decision.
 
 No email or external write occurs in mock mode.
 
@@ -126,6 +128,7 @@ Never commit `.env`. Vercel Functions have ephemeral local storage, so the local
 - The connector creates drafts only.
 - There is no approve endpoint.
 - There is no send endpoint.
+- Page-level JG review records are clearly separated from Better Proposals native Manager Approval and never send a document.
 - Duplicate create requests are suppressed using an idempotency key.
 - Test records are stored locally in `data/drafts.json`.
 

@@ -20,7 +20,7 @@ Pass condition: the Visture template and required account settings can be select
 
 ## Test 2: Draft creation
 
-- [ ] Load the sample intake and proposal.
+- [ ] Select `Fill form with dummy data` and confirm all required intake and proposal content is populated.
 - [ ] Select the Visture template and settings.
 - [ ] Confirm the entered test recipient email is correct.
 - [ ] Check all three release confirmations.
@@ -35,6 +35,8 @@ Pass condition: exactly one unsent Better Proposals draft exists for the test re
 
 ## Test 3: Template rendering
 
+- [ ] Review the on-page content preview returned after draft creation.
+- [ ] Open the Better Proposals review link and compare it with the on-page content preview.
 - [ ] Open the created draft.
 - [ ] Confirm the Visture brand and cover.
 - [ ] Confirm the project name and address.
@@ -50,6 +52,9 @@ Pass condition: exactly one unsent Better Proposals draft exists for the test re
 Pass condition: the draft is client-presentable after normal JG review and minor edits.
 
 ## Test 4: JG approval control
+
+- [ ] Record JG's page-level approval or request-for-changes decision.
+- [ ] Confirm the page states that this decision does not perform Better Proposals native approval.
 
 ### Enterprise
 

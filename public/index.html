@@ -241,6 +241,22 @@
     .dictation-status { color: var(--muted); font-size: 12px; }
     .dictation-status.listening { color: var(--blue); font-weight: 600; }
 
+    .mic-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--charcoal);
+      border-color: var(--charcoal);
+      color: #fff;
+    }
+
+    .mic-button svg { width: 21px; height: 21px; fill: currentColor; }
+    .mic-button.recording { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 5px rgba(230,94,50,.16); }
+
     .callout {
       border-left: 4px solid var(--blue);
       background: var(--blue-soft);
@@ -340,6 +356,46 @@
     }
     .result.show { display: block; }
 
+    .proposal-preview {
+      display: none;
+      margin: 18px 0;
+      border: 1px solid var(--line);
+      background: #e9e9e5;
+      padding: 18px;
+    }
+
+    .proposal-preview.show { display: block; }
+    .proposal-paper { max-width: 780px; margin: 0 auto; background: #fff; box-shadow: 0 14px 38px rgba(41,40,36,.14); }
+    .proposal-cover { background: var(--charcoal-deep); color: #fff; padding: 48px 40px; border-top: 7px solid var(--blue); }
+    .proposal-cover img { width: 210px; max-width: 65%; filter: brightness(0) invert(1); margin-bottom: 38px; }
+    .proposal-cover h3 { color: #fff; font-size: clamp(26px, 4vw, 42px); line-height: 1.1; text-transform: uppercase; }
+    .proposal-cover p { color: #d8d7d2; }
+    .proposal-content { padding: 36px 40px 44px; }
+    .proposal-block { padding: 20px 0; border-bottom: 1px solid var(--line); }
+    .proposal-block:last-child { border-bottom: 0; }
+    .proposal-block h4 { margin: 0 0 9px; color: var(--blue); text-transform: uppercase; letter-spacing: .05em; font-size: 13px; }
+    .proposal-block p { white-space: pre-line; }
+
+    .review-panel { margin-top: 18px; padding: 18px; border: 1px solid var(--line); border-left: 4px solid var(--blue); background: #fafaf8; }
+    .review-state { display: inline-block; margin-bottom: 12px; padding: 6px 9px; background: var(--charcoal); color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    .review-state.approved { background: #2d704e; }
+    .review-state.changes { background: var(--blue); }
+
+    .button-link {
+      display: inline-block;
+      border: 1px solid var(--blue);
+      background: var(--blue);
+      color: #fff;
+      padding: 9px 13px;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: .035em;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    .button-link:hover { background: #c94b25; color: #fff; }
+
     .small-code {
       font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
       background: #f3f6f8;
@@ -414,8 +470,10 @@
             <label>Site notes <span class="required">*</span></label>
             <textarea id="siteNotes" class="tall" placeholder="Type site notes or use voice dictation."></textarea>
             <div class="dictation-tools">
-              <button id="dictationButton" type="button">Start dictation</button>
-              <span id="dictationStatus" class="dictation-status">Microphone is off.</span>
+              <button id="dictationButton" class="mic-button" type="button" aria-label="Start voice dictation" title="Start voice dictation">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v7a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2Z"/></svg>
+              </button>
+              <span id="dictationStatus" class="dictation-status">Allow microphone access in your browser when prompted.</span>
             </div>
           </div>
 
@@ -433,7 +491,7 @@
           <div class="field"><label>Client objectives <span class="required">*</span></label><textarea id="clientObjectives" class="tall" placeholder="What the client wants the project to accomplish."></textarea></div>
           <div class="field"><label>Client constraints <span class="required">*</span></label><textarea id="clientConstraints" class="tall" placeholder="Budget, timing, access, building rules, risk, selections, or other constraints."></textarea></div>
         </div>
-        <div class="actions"><button id="loadDemo" class="primary" type="button">Load sample intake and proposal</button><button id="showIntake" type="button">Preview intake JSON</button></div>
+        <div class="actions"><button id="loadDemo" class="primary" type="button">Fill form with dummy data</button><button id="showIntake" type="button">Preview intake JSON</button></div>
       </div>
     </section>
 
@@ -486,8 +544,25 @@
     </section>
 
     <section id="approvalSection">
-      <div class="section-head"><span class="number">06</span><h2>JG approval and customer delivery</h2><span class="section-note">Completed inside Better Proposals</span></div>
+      <div class="section-head"><span class="number">06</span><h2>Preview and JG approval</h2><span class="section-note">Review here; native approval in Better Proposals</span></div>
       <div class="section-body">
+        <div class="callout warn"><strong>Approval boundary:</strong> recording JG's decision here does not call a Better Proposals approval or send action. Native Manager Approval must still be completed by JG inside Better Proposals.</div>
+
+        <div id="proposalPreview" class="proposal-preview" aria-live="polite"></div>
+
+        <div class="review-panel">
+          <span id="pageReviewState" class="review-state">Awaiting draft</span>
+          <div class="field">
+            <label>JG review notes</label>
+            <textarea id="jgReviewNotes" placeholder="Record required changes or approval notes."></textarea>
+          </div>
+          <div class="actions">
+            <button id="markApprovedButton" class="good" type="button" disabled>Record JG approval on this page</button>
+            <button id="markChangesButton" type="button" disabled>Request changes</button>
+            <a id="nativeApprovalLink" class="button-link" href="https://betterproposals.io/" target="_blank" rel="noopener noreferrer">Open Better Proposals</a>
+          </div>
+        </div>
+
         <div class="grid g2">
           <div>
             <h3>Enterprise approval path</h3>
@@ -534,7 +609,9 @@
         <div class="status-row"><span>Server</span><span class="status warn" id="serverStatus">Checking</span></div>
         <div class="status-row"><span>API token</span><span class="status warn" id="tokenStatus">Checking</span></div>
         <div class="status-row"><span>Recipient</span><span class="status warn" id="recipientStatus">Not set</span></div>
+        <div class="status-row"><span>Connection</span><span class="status warn" id="connectionStatus">Not tested</span></div>
         <div class="status-row"><span>Draft creation</span><span class="status warn" id="draftStatus">Not run</span></div>
+        <div class="status-row"><span>JG page review</span><span class="status warn" id="reviewStatus">Not reviewed</span></div>
         <div class="status-row"><span>Auto-send</span><span class="status good">Disabled</span></div>
       </div>
     </div>
@@ -575,6 +652,7 @@
   const $ = (id) => document.getElementById(id);
   let health = null;
   let latestDraft = null;
+  let discoveryPassed = false;
 
   function fileNames(input) {
     return Array.from(input.files || []).map((file) => ({ name: file.name, size: file.size, type: file.type || '' }));
@@ -615,7 +693,9 @@
       listening = true;
       startingText = value('siteNotes');
       finalTranscript = '';
-      button.textContent = 'Stop dictation';
+      button.classList.add('recording');
+      button.setAttribute('aria-label', 'Stop voice dictation');
+      button.title = 'Stop voice dictation';
       status.textContent = 'Listening… speak your site notes.';
       status.className = 'dictation-status listening';
     });
@@ -638,8 +718,10 @@
 
     recognition.addEventListener('end', () => {
       listening = false;
-      button.textContent = 'Start dictation';
-      if (status.classList.contains('listening')) status.textContent = 'Microphone is off.';
+      button.classList.remove('recording');
+      button.setAttribute('aria-label', 'Start voice dictation');
+      button.title = 'Start voice dictation';
+      if (status.classList.contains('listening')) status.textContent = 'Dictation ready. Tap the microphone to add more notes.';
       status.className = 'dictation-status';
     });
 
@@ -734,13 +816,21 @@
     if (!payload.proposal.scope) missing.push('Scope of work');
     if (!payload.proposal.pricing) missing.push('Pricing summary');
     if (!payload.betterProposals.templateId) missing.push('Better Proposals template ID');
+    if (!health) missing.push('Completed server health check');
+    if (health && health.mode === 'live' && !discoveryPassed) missing.push('Successful Better Proposals account discovery');
     if (!payload.release.forJGReview) missing.push('All three release confirmations');
     return missing;
   }
 
   function loadDemo() {
+    $('intakeId').value = 'VST-BP-POC-DUMMY-001';
+    $('revision').value = '1';
     $('projectName').value = 'TEST ONLY - Harbour View Condo Renovation';
     $('siteAddress').value = '123 Sample Street, Vancouver, BC';
+    $('firstName').value = 'Test';
+    $('lastName').value = 'Recipient';
+    $('clientCompany').value = 'Visture Demo';
+    $('recipientEmail').value = 'test-recipient@example.com';
     $('siteNotes').value = 'Test site visit notes: renovate the kitchen and primary bathroom, replace flooring through the main living areas, protect common corridors, and coordinate all noisy work with building rules. Existing finishes are dated but no visible structural damage was observed during the fictional walkthrough.';
     $('siteNotes').value += ' Dictated note: the client wants a brighter kitchen with more storage, a safer low-threshold shower, durable flooring, and a clear breakdown of allowances and exclusions. Confirm electrical capacity and plumbing routing before final issue.';
     $('measurements').value = 'Kitchen: 4.8 m x 3.6 m. Primary bathroom: 2.7 m x 2.4 m. Flooring replacement area: approximately 118 sq m. Ceiling height: 2.44 m. All quantities are fictional and for connection testing only.';
@@ -768,6 +858,7 @@
     $('exclusions').value = 'Hazardous-material abatement, structural engineering, appliance supply, strata fees, and work outside the stated rooms unless added by approved change.';
     $('options').value = 'Optional millwork upgrade: CAD 18,000. Optional smart lighting package: CAD 6,500. Values are fictional.';
     if (!$('templateId').value && !$('templateIdManual').value) $('templateIdManual').value = health && health.mode === 'live' ? '' : 'MOCK-TEMPLATE-01';
+    updateRecipientStatus();
   }
 
   $('loadDemo').addEventListener('click', loadDemo);
@@ -786,6 +877,125 @@
   function statusClass(element, className, text) {
     element.className = `status ${className}`;
     element.textContent = text;
+  }
+
+  function appendPreviewBlock(container, heading, content) {
+    if (!content) return;
+    const block = document.createElement('div');
+    block.className = 'proposal-block';
+    const title = document.createElement('h4');
+    title.textContent = heading;
+    const body = document.createElement('p');
+    body.textContent = content;
+    block.append(title, body);
+    container.appendChild(block);
+  }
+
+  function safeHttpUrl(candidate) {
+    try {
+      const url = new URL(candidate);
+      return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '';
+    } catch (_error) {
+      return '';
+    }
+  }
+
+  function renderProposalPreview(payload, record) {
+    const preview = $('proposalPreview');
+    preview.textContent = '';
+
+    const note = document.createElement('div');
+    note.className = 'callout';
+    note.textContent = 'On-page content preview. Open the returned Better Proposals link to verify the exact selected template, pricing blocks, fonts, and pagination.';
+
+    const paper = document.createElement('article');
+    paper.className = 'proposal-paper';
+    const cover = document.createElement('div');
+    cover.className = 'proposal-cover';
+    const logo = document.createElement('img');
+    logo.src = '/assets/visture-logo.png';
+    logo.alt = 'Visture Property Group';
+    const projectName = document.createElement('h3');
+    projectName.textContent = payload.project.name;
+    const projectMeta = document.createElement('p');
+    projectMeta.textContent = [payload.project.siteAddress, payload.recipient.fullName, payload.recipient.company].filter(Boolean).join(' • ');
+    cover.append(logo, projectName, projectMeta);
+
+    const content = document.createElement('div');
+    content.className = 'proposal-content';
+    appendPreviewBlock(content, 'Proposal summary', payload.proposal.summary);
+    appendPreviewBlock(content, 'Client objectives', payload.intake.clientObjectives);
+    appendPreviewBlock(content, 'Client constraints', payload.intake.clientConstraints);
+    appendPreviewBlock(content, 'Scope of work', payload.proposal.scope);
+    appendPreviewBlock(content, 'Pricing summary', payload.proposal.pricing);
+    appendPreviewBlock(content, 'Proposal total', payload.proposal.total);
+    appendPreviewBlock(content, 'Assumptions', payload.proposal.assumptions);
+    appendPreviewBlock(content, 'Exclusions', payload.proposal.exclusions);
+    appendPreviewBlock(content, 'Options', payload.proposal.options);
+
+    const reviewUrl = safeHttpUrl(record.reviewUrl || '');
+    if (reviewUrl) {
+      const linkWrap = document.createElement('div');
+      linkWrap.className = 'proposal-block';
+      const link = document.createElement('a');
+      link.className = 'button-link';
+      link.href = reviewUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'Open exact Better Proposals draft';
+      linkWrap.appendChild(link);
+      content.appendChild(linkWrap);
+      $('nativeApprovalLink').href = reviewUrl;
+    }
+
+    paper.append(cover, content);
+    preview.append(note, paper);
+    preview.className = 'proposal-preview show';
+  }
+
+  function reviewStorageKey() {
+    const proposalId = value('proposalId');
+    return proposalId ? `visture-jg-review:${proposalId}` : '';
+  }
+
+  function showReviewDecision(review) {
+    const state = $('pageReviewState');
+    if (!review) {
+      state.className = 'review-state';
+      state.textContent = 'Awaiting JG review';
+      statusClass($('reviewStatus'), 'warn', 'Not reviewed');
+      return;
+    }
+    const approved = review.decision === 'approved';
+    state.className = `review-state ${approved ? 'approved' : 'changes'}`;
+    state.textContent = approved ? 'JG approved on this page' : 'JG requested changes';
+    statusClass($('reviewStatus'), approved ? 'good' : 'bad', approved ? 'Page approved' : 'Changes requested');
+    $('jgReviewNotes').value = review.notes || '';
+  }
+
+  function loadReviewDecision() {
+    const key = reviewStorageKey();
+    if (!key) return showReviewDecision(null);
+    try {
+      const saved = localStorage.getItem(key);
+      showReviewDecision(saved ? JSON.parse(saved) : null);
+    } catch (_error) {
+      showReviewDecision(null);
+    }
+  }
+
+  function recordReviewDecision(decision) {
+    const key = reviewStorageKey();
+    if (!latestDraft || !key) return;
+    if (decision === 'approved' && !window.confirm('Record JG approval in this page? This will not approve or send the document in Better Proposals.')) return;
+    const review = {
+      decision,
+      notes: value('jgReviewNotes'),
+      proposalId: value('proposalId'),
+      recordedAt: new Date().toISOString(),
+    };
+    try { localStorage.setItem(key, JSON.stringify(review)); } catch (_error) { /* Browser storage may be disabled. */ }
+    showReviewDecision(review);
   }
 
   async function checkHealth() {
@@ -850,6 +1060,8 @@
 
   async function discover() {
     const resultBox = $('discoveryResult');
+    discoveryPassed = false;
+    statusClass($('connectionStatus'), 'warn', 'Testing');
     resultBox.className = 'result show';
     resultBox.innerHTML = '<div class="callout">Testing the connection and reading templates, document types, currencies, brands, and merge tags.</div>';
     try {
@@ -861,14 +1073,22 @@
       const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
       const accountTags = Array.isArray(data.mergeTags) ? data.mergeTags.map((item) => mergeTagName(item, recordName(item, ''))) : [];
       const missingTags = requiredTags.filter((tag) => !accountTags.includes(tag));
+      const coreListsReady = Array.isArray(data.templates) && data.templates.length > 0
+        && Array.isArray(data.documentTypes) && data.documentTypes.length > 0
+        && Array.isArray(data.currencies) && data.currencies.length > 0;
+      discoveryPassed = coreListsReady && missingTags.length === 0;
+      statusClass($('connectionStatus'), discoveryPassed ? 'good' : 'bad', discoveryPassed ? 'Ready' : 'Needs setup');
       resultBox.innerHTML = [
-        `<div class="${missingTags.length ? 'danger-banner' : 'success-banner'}">${missingTags.length ? `Connection succeeded, but ${missingTags.length} required merge tag(s) were not matched.` : 'Connection succeeded and all expected merge tags were matched.'}</div>`,
+        `<div class="${discoveryPassed ? 'success-banner' : 'danger-banner'}">${discoveryPassed ? 'Connection succeeded. Core account lists and all expected merge tags are ready.' : 'Account discovery completed, but the connection is not ready for draft creation.'}</div>`,
+        !coreListsReady ? '<p><strong>Required:</strong> at least one template, document type, and currency must be returned.</p>' : '',
         missingTags.length ? `<p><strong>Missing tags:</strong> ${missingTags.join(', ')}</p>` : '',
         `<p><strong>Mode:</strong> ${data.mode}</p>`,
         '<button type="button" id="showDiscoveryRaw">View raw discovery response</button>'
       ].join('');
       $('showDiscoveryRaw').addEventListener('click', () => showDialog('Better Proposals discovery response', data));
     } catch (error) {
+      discoveryPassed = false;
+      statusClass($('connectionStatus'), 'bad', 'Failed');
       resultBox.innerHTML = `<div class="danger-banner">${error.message}</div>`;
     }
   }
@@ -900,6 +1120,10 @@
       const proposalUrl = record.reviewUrl || (record.apiResponse && record.apiResponse.data && (record.apiResponse.data.PreviewURL || record.apiResponse.data.url)) || '';
       $('proposalId').value = proposalId;
       $('proposalUrl').value = proposalUrl;
+      renderProposalPreview(payload, { ...record, reviewUrl: proposalUrl });
+      $('markApprovedButton').disabled = false;
+      $('markChangesButton').disabled = false;
+      loadReviewDecision();
       statusClass($('draftStatus'), 'good', data.duplicatePrevented ? 'Existing draft reused' : 'Draft created');
       resultBox.innerHTML = [
         `<div class="success-banner">${data.duplicatePrevented ? 'Duplicate prevented. The existing draft was returned.' : 'Better Proposals draft created successfully.'}</div>`,
@@ -940,6 +1164,8 @@
   }
 
   $('checkStatusButton').addEventListener('click', checkStatus);
+  $('markApprovedButton').addEventListener('click', () => recordReviewDecision('approved'));
+  $('markChangesButton').addEventListener('click', () => recordReviewDecision('changes_requested'));
 
   checkHealth();
 })();
