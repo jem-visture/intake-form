@@ -292,6 +292,26 @@
 
     .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
+    .form-start-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 0 20px;
+      padding: 15px 18px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--blue);
+      box-shadow: 0 5px 15px rgba(50,50,50,.04);
+    }
+
+    .form-start-actions p { margin: 0; color: var(--muted); font-size: 13px; }
+    .form-start-actions button { flex: 0 0 auto; }
+
+    @media (max-width: 620px) {
+      .form-start-actions { align-items: stretch; flex-direction: column; }
+    }
+
     .checklist { display: grid; gap: 8px; }
     .checkline { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; }
     .checkline input { width: auto; margin-top: 3px; }
@@ -445,6 +465,14 @@
       </div>
     </div>
 
+    <div class="form-start-actions">
+      <div>
+        <h3>Testing the workflow?</h3>
+        <p>Populate the intake and proposal fields with safe fictional content, then confirm the recipient and account settings.</p>
+      </div>
+      <button id="loadDemo" class="primary" type="button">Fill form with dummy data</button>
+    </div>
+
     <section id="projectSection">
       <div class="section-head"><span class="number">01</span><h2>Project and test recipient</h2><span class="section-note">Minimal routing information</span></div>
       <div class="section-body">
@@ -491,7 +519,7 @@
           <div class="field"><label>Client objectives <span class="required">*</span></label><textarea id="clientObjectives" class="tall" placeholder="What the client wants the project to accomplish."></textarea></div>
           <div class="field"><label>Client constraints <span class="required">*</span></label><textarea id="clientConstraints" class="tall" placeholder="Budget, timing, access, building rules, risk, selections, or other constraints."></textarea></div>
         </div>
-        <div class="actions"><button id="loadDemo" class="primary" type="button">Fill form with dummy data</button><button id="showIntake" type="button">Preview intake JSON</button></div>
+        <div class="actions"><button id="showIntake" type="button">Preview intake JSON</button></div>
       </div>
     </section>
 
