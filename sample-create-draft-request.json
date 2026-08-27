@@ -1,0 +1,52 @@
+{
+  "intakeId": "VST-BP-POC-001",
+  "revision": "1",
+  "project": {
+    "name": "TEST ONLY - Harbour View Condo Renovation",
+    "siteAddress": "123 Sample Street, Vancouver, BC"
+  },
+  "recipient": {
+    "firstName": "Jem",
+    "lastName": "",
+    "fullName": "Jem",
+    "company": "Visture",
+    "email": "jem@visture.ca",
+    "signatureRequired": true
+  },
+  "intake": {
+    "siteNotes": "Fictional test site notes.",
+    "siteNoteFiles": [],
+    "voiceTranscript": "Fictional test transcript.",
+    "voiceFiles": [],
+    "measurements": "Fictional test measurements.",
+    "measurementFiles": [],
+    "photoNotes": "Fictional photo references.",
+    "photoFiles": [],
+    "clientObjectives": "Create a brighter and safer home.",
+    "clientConstraints": "Test budget and condo restrictions."
+  },
+  "proposal": {
+    "summary": "Fictional proposal summary for connection testing.",
+    "scope": "Fictional scope of work for connection testing.",
+    "pricing": "TEST BASE TOTAL: CAD 280,000 before GST.",
+    "total": "CAD 280,000 before GST - TEST ONLY",
+    "assumptions": "Fictional assumptions.",
+    "exclusions": "Fictional exclusions.",
+    "options": "Fictional options."
+  },
+  "betterProposals": {
+    "templateId": "REPLACE_WITH_REAL_TEMPLATE_ID",
+    "coverId": "",
+    "brandId": "",
+    "documentType": "Proposal",
+    "currency": "cad",
+    "taxEnabled": true,
+    "taxLabel": "GST",
+    "taxAmount": "5"
+  },
+  "release": {
+    "forJGReview": true,
+    "reviewOwner": "JG",
+    "automaticSend": false
+  }
+}

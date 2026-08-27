@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visture Better Proposals POC</title>
+  <style>
+    :root {
+      --ink: #15212b;
+      --muted: #667684;
+      --paper: #eef2f4;
+      --surface: #ffffff;
+      --line: #cbd5dc;
+      --blue: #1f4e79;
+      --blue-soft: #e8f0f7;
+      --green: #176b4c;
+      --green-soft: #e7f4ed;
+      --amber: #a95d00;
+      --amber-soft: #fff3df;
+      --red: #9c2f2f;
+      --red-soft: #fbeaea;
+      --shadow: 0 12px 34px rgba(21, 33, 43, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--ink);
+      color: #fff;
+      border-bottom: 4px solid var(--blue);
+    }
+
+    .header-inner {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 18px 24px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .title {
+      color: #b9c8d4;
+      font-weight: 650;
+    }
+
+    .mode-badge {
+      margin-left: auto;
+      border: 1px solid #60788b;
+      padding: 5px 10px;
+      font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .mode-badge.live { border-color: #66c69d; color: #9de2c3; }
+    .mode-badge.mock { border-color: #eab566; color: #f7ca89; }
+
+    .layout {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 26px 24px 60px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { order: -1; position: static !important; }
+      .mode-badge { margin-left: 0; }
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--surface), #f8fafb);
+      border: 1px solid var(--line);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      font: 750 12px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    h1 { margin: 9px 0 9px; font-size: clamp(27px, 4vw, 42px); line-height: 1.06; }
+    h2 { margin: 0; font-size: 21px; }
+    h3 { margin: 0 0 8px; font-size: 16px; }
+    p { margin: 0 0 10px; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .flow div {
+      min-height: 72px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .flow strong { display: block; color: var(--ink); font-size: 13px; margin-bottom: 3px; }
+
+    @media (max-width: 740px) { .flow { grid-template-columns: 1fr; } }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      margin-bottom: 18px;
+      box-shadow: 0 5px 15px rgba(21, 33, 43, 0.03);
+    }
+
+    .section-head {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8fafb;
+    }
+
+    .number {
+      display: inline-flex;
+      width: 30px;
+      height: 30px;
+      align-items: center;
+      justify-content: center;
+      background: var(--blue);
+      color: #fff;
+      font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .section-note { margin-left: auto; color: var(--muted); font-size: 12px; }
+    .section-body { padding: 18px; }
+
+    .grid { display: grid; gap: 14px; }
+    .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 720px) { .g2, .g3 { grid-template-columns: 1fr; } }
+
+    .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    label, .label { font-weight: 750; font-size: 12px; letter-spacing: 0.025em; }
+    .hint { color: var(--muted); font-size: 11.5px; }
+    .required { color: var(--amber); }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #aebbc5;
+      background: #fff;
+      color: var(--ink);
+      padding: 9px 10px;
+      border-radius: 2px;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: 2px solid var(--blue);
+      outline-offset: -1px;
+    }
+
+    textarea { min-height: 92px; resize: vertical; }
+    .tall { min-height: 150px; }
+
+    .upload-card {
+      border: 1px dashed #9aabb7;
+      background: #fbfcfd;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .file-list {
+      color: var(--muted);
+      font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      min-height: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .callout {
+      border-left: 4px solid var(--blue);
+      background: var(--blue-soft);
+      padding: 12px 14px;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .callout.warn { border-color: var(--amber); background: var(--amber-soft); }
+    .callout.good { border-color: var(--green); background: var(--green-soft); }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+      padding: 9px 13px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.035em;
+      cursor: pointer;
+      border-radius: 2px;
+    }
+
+    button:hover { background: var(--ink); color: #fff; }
+    button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+    button.primary:hover { background: #173b5b; }
+    button.good { background: var(--green); border-color: var(--green); color: #fff; }
+    button.good:hover { background: #10523a; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button:disabled:hover { background: inherit; color: inherit; }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+    .checklist { display: grid; gap: 8px; }
+    .checkline { display: flex; gap: 9px; align-items: flex-start; font-size: 13px; }
+    .checkline input { width: auto; margin-top: 3px; }
+
+    aside { position: sticky; top: 92px; }
+    .rail-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    .rail-head { padding: 13px 15px; border-bottom: 1px solid var(--line); background: var(--ink); color: #fff; }
+    .rail-body { padding: 14px; }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #e3e8ec;
+      font-size: 13px;
+    }
+
+    .status-row:last-child { border-bottom: 0; }
+    .status { font-weight: 800; }
+    .status.good { color: var(--green); }
+    .status.warn { color: var(--amber); }
+    .status.bad { color: var(--red); }
+
+    pre {
+      margin: 0;
+      max-height: 420px;
+      overflow: auto;
+      padding: 13px;
+      background: #111b23;
+      color: #d9e3ea;
+      font: 11.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    dialog {
+      width: min(920px, calc(100vw - 32px));
+      max-height: 88vh;
+      border: 1px solid var(--line);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+      padding: 0;
+    }
+
+    dialog::backdrop { background: rgba(10, 18, 25, 0.58); }
+    .dialog-head { display: flex; align-items: center; gap: 12px; padding: 13px 15px; background: var(--ink); color: #fff; }
+    .dialog-head button { margin-left: auto; border-color: #718797; background: transparent; color: #fff; }
+    .dialog-body { padding: 0; }
+
+    .result {
+      display: none;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      padding: 14px;
+      background: #fbfcfd;
+    }
+    .result.show { display: block; }
+
+    .small-code {
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: #f3f6f8;
+      padding: 2px 5px;
+    }
+
+    .success-banner {
+      border: 1px solid #91c9ae;
+      background: var(--green-soft);
+      color: #124f39;
+      padding: 12px 14px;
+      font-weight: 700;
+    }
+
+    .danger-banner {
+      border: 1px solid #dda3a3;
+      background: var(--red-soft);
+      color: #7d2626;
+      padding: 12px 14px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="brand">Visture</div>
+    <div class="title">Better Proposals connection proof of concept</div>
+    <div class="mode-badge mock" id="modeBadge">Checking connection</div>
+  </div>
+</header>
+
+<div class="layout">
+  <main>
+    <div class="hero">
+      <div class="eyebrow">POC acceptance path</div>
+      <h1>Create the draft automatically. Keep approval and sending under human control.</h1>
+      <p>This test is intentionally centered on Better Proposals. The intake is reduced to the source material named in JG's brief, and the test recipient is Jem at <strong>jem@visture.ca</strong>.</p>
+      <div class="flow">
+        <div><strong>1. Simple intake</strong>Notes, dictation, measurements, photos, objectives, constraints.</div>
+        <div><strong>2. Proposal content</strong>Use sample estimate and scope content for the integration test.</div>
+        <div><strong>3. API draft</strong>Create a Better Proposals draft for JG review.</div>
+        <div><strong>4. JG review</strong>Approve inside Better Proposals. No send action exists here.</div>
+        <div><strong>5. Human send</strong>Authorized user clicks Send Document to Jem.</div>
+      </div>
+    </div>
+
+    <section id="projectSection">
+      <div class="section-head"><span class="number">01</span><h2>Project and test recipient</h2><span class="section-note">Minimal routing information</span></div>
+      <div class="section-body">
+        <div class="grid g2">
+          <div class="field"><label>Intake ID <span class="required">*</span></label><input id="intakeId" value="VST-BP-POC-001"></div>
+          <div class="field"><label>Revision <span class="required">*</span></label><input id="revision" value="1"></div>
+          <div class="field"><label>Project name <span class="required">*</span></label><input id="projectName" placeholder="POC Test Renovation"></div>
+          <div class="field"><label>Site address</label><input id="siteAddress" placeholder="Test address only"></div>
+          <div class="field"><label>Client first name <span class="required">*</span></label><input id="firstName" value="Jem"></div>
+          <div class="field"><label>Client last name</label><input id="lastName" placeholder="Optional for test"></div>
+          <div class="field"><label>Client company</label><input id="clientCompany" value="Visture"></div>
+          <div class="field"><label>Test recipient email <span class="required">*</span></label><input id="recipientEmail" type="email" value="jem@visture.ca"><span class="hint">The server allowlists this address to prevent accidental sends or drafts to other recipients during testing.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="intakeSection">
+      <div class="section-head"><span class="number">02</span><h2>Standard site intake</h2><span class="section-note">Only the six source categories from the brief</span></div>
+      <div class="section-body">
+        <div class="callout">Files selected here remain in the browser. This POC records their filenames and text summaries; a later GoHighLevel or Drive step will handle permanent file storage.</div>
+        <div class="grid g2">
+          <div class="upload-card">
+            <div class="field"><label>Site notes <span class="required">*</span></label><input id="siteNotesFiles" type="file" multiple accept=".txt,.md,.doc,.docx,.pdf,image/*"></div>
+            <div class="file-list" id="siteNotesFileList">No files selected.</div>
+            <textarea id="siteNotes" placeholder="Paste or type the site notes."></textarea>
+          </div>
+
+          <div class="upload-card">
+            <div class="field"><label>Voice dictation</label><input id="voiceFiles" type="file" multiple accept="audio/*,.txt,.doc,.docx,.pdf"></div>
+            <div class="file-list" id="voiceFileList">No files selected.</div>
+            <textarea id="voiceTranscript" placeholder="Paste the transcript, or note that transcription is pending."></textarea>
+          </div>
+
+          <div class="upload-card">
+            <div class="field"><label>Measurements <span class="required">*</span></label><input id="measurementFiles" type="file" multiple accept=".csv,.xlsx,.xls,.pdf,image/*,.txt"></div>
+            <div class="file-list" id="measurementFileList">No files selected.</div>
+            <textarea id="measurements" placeholder="List room dimensions, quantities, areas, or drawing references."></textarea>
+          </div>
+
+          <div class="upload-card">
+            <div class="field"><label>Photographs</label><input id="photoFiles" type="file" multiple accept="image/*"></div>
+            <div class="file-list" id="photoFileList">No photographs selected.</div>
+            <textarea id="photoNotes" placeholder="Describe the photographed areas or paste Drive references."></textarea>
+          </div>
+
+          <div class="field"><label>Client objectives <span class="required">*</span></label><textarea id="clientObjectives" class="tall" placeholder="What the client wants the project to accomplish."></textarea></div>
+          <div class="field"><label>Client constraints <span class="required">*</span></label><textarea id="clientConstraints" class="tall" placeholder="Budget, timing, access, building rules, risk, selections, or other constraints."></textarea></div>
+        </div>
+        <div class="actions"><button id="loadDemo" class="primary" type="button">Load sample intake and proposal</button><button id="showIntake" type="button">Preview intake JSON</button></div>
+      </div>
+    </section>
+
+    <section id="proposalSection">
+      <div class="section-head"><span class="number">03</span><h2>Proposal content for the API test</h2><span class="section-note">Sample output replaces full estimating automation in phase one</span></div>
+      <div class="section-body">
+        <div class="callout warn">This is not the final estimating engine. It provides enough approved content to prove that Better Proposals receives and renders the data correctly.</div>
+        <div class="grid g2">
+          <div class="field"><label>Proposal summary <span class="required">*</span></label><textarea id="proposalSummary"></textarea></div>
+          <div class="field"><label>Scope of work <span class="required">*</span></label><textarea id="scopeOfWork" class="tall"></textarea></div>
+          <div class="field"><label>Pricing summary <span class="required">*</span></label><textarea id="pricingSummary" class="tall"></textarea></div>
+          <div class="field"><label>Proposal total</label><input id="proposalTotal" placeholder="CAD 125,000 before GST"></div>
+          <div class="field"><label>Assumptions</label><textarea id="assumptions"></textarea></div>
+          <div class="field"><label>Exclusions</label><textarea id="exclusions"></textarea></div>
+          <div class="field"><label>Options</label><textarea id="options"></textarea></div>
+        </div>
+        <div class="actions"><button id="showPayload" type="button">Preview Better Proposals request</button></div>
+      </div>
+    </section>
+
+    <section id="connectionSection">
+      <div class="section-head"><span class="number">04</span><h2>Better Proposals account mapping</h2><span class="section-note">Discovered through the connected account</span></div>
+      <div class="section-body">
+        <div class="callout good"><strong>Recommended:</strong> use the direct Better Proposals API for draft creation because it accepts custom merge tags. Use Zapier later for Proposal Sent, Opened, and Signed status events.</div>
+        <div class="actions" style="margin-top:0;margin-bottom:14px"><button id="discoverButton" class="primary" type="button">Test connection and discover account</button></div>
+        <div class="grid g3">
+          <div class="field"><label>Template ID <span class="required">*</span></label><select id="templateId"><option value="">Discover or enter below</option></select><input id="templateIdManual" placeholder="Manual template ID"></div>
+          <div class="field"><label>Cover ID</label><input id="coverId" placeholder="Optional cover ID"></div>
+          <div class="field"><label>Brand ID</label><select id="brandId"><option value="">Default brand</option></select><input id="brandIdManual" placeholder="Manual brand ID"></div>
+          <div class="field"><label>Document type</label><select id="documentType"><option>Proposal</option></select></div>
+          <div class="field"><label>Currency</label><select id="currency"><option value="cad">CAD</option></select></div>
+          <div class="field"><label>Tax</label><div class="grid g2"><select id="taxEnabled"><option value="true">Apply tax</option><option value="false">No tax</option></select><input id="taxAmount" type="number" value="5" min="0" step="0.01"></div><input id="taxLabel" value="GST"></div>
+        </div>
+        <div id="discoveryResult" class="result"></div>
+      </div>
+    </section>
+
+    <section id="draftSection">
+      <div class="section-head"><span class="number">05</span><h2>Create draft for JG review</h2><span class="section-note">Draft creation is the only write action</span></div>
+      <div class="section-body">
+        <div class="callout warn"><strong>Important:</strong> this releases a draft to Better Proposals. It does not represent JG's final approval and cannot send the proposal.</div>
+        <div class="checklist">
+          <label class="checkline"><input id="contentReady" type="checkbox">The sample scope and pricing are ready to be used for a test draft.</label>
+          <label class="checkline"><input id="jgReviewer" type="checkbox">JG is the designated final reviewer.</label>
+          <label class="checkline"><input id="testRecipientConfirmed" type="checkbox">I confirm the only test recipient is jem@visture.ca.</label>
+        </div>
+        <div class="actions"><button id="createDraftButton" class="good" type="button">Create Better Proposals draft</button></div>
+        <div id="createResult" class="result"></div>
+      </div>
+    </section>
+
+    <section id="approvalSection">
+      <div class="section-head"><span class="number">06</span><h2>JG approval and customer delivery</h2><span class="section-note">Completed inside Better Proposals</span></div>
+      <div class="section-body">
+        <div class="grid g2">
+          <div>
+            <h3>Enterprise approval path</h3>
+            <ol>
+              <li>The creator opens the API-created draft and selects <strong>Request Approval</strong>.</li>
+              <li>JG opens the item under <strong>Documents &gt; Pending</strong> and approves or denies it.</li>
+              <li>After approval, an authorized user opens the approved item and clicks <strong>Send Document</strong>.</li>
+              <li>Jem receives the proposal at <strong>jem@visture.ca</strong> and completes the signature test.</li>
+            </ol>
+          </div>
+          <div>
+            <h3>Premium fallback</h3>
+            <ol>
+              <li>The API creates the draft.</li>
+              <li>JG reviews it manually; Premium does not include native Manager Approvals.</li>
+              <li>JG or an authorized user clicks <strong>Send Document</strong>.</li>
+              <li>Zapier can observe sent, opened, and signed events for GoHighLevel updates.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="grid g2" style="margin-top:14px">
+          <div class="field"><label>Proposal ID returned by Better Proposals</label><input id="proposalId" placeholder="Populated after draft creation"></div>
+          <div class="field"><label>Proposal URL or note</label><input id="proposalUrl" placeholder="Populated if returned by the API"></div>
+        </div>
+        <div class="actions"><button id="checkStatusButton" type="button">Check proposal status</button></div>
+        <div id="statusResult" class="result"></div>
+        <h3 style="margin-top:20px">Acceptance checklist</h3>
+        <div class="checklist">
+          <label class="checkline"><input type="checkbox">Draft appears in the correct Better Proposals account and uses the Visture template.</label>
+          <label class="checkline"><input type="checkbox">Merge-tag content appears in the correct sections without broken formatting.</label>
+          <label class="checkline"><input type="checkbox">JG can review the full proposal before it is sent.</label>
+          <label class="checkline"><input type="checkbox">The proposal cannot bypass the intended approval controls.</label>
+          <label class="checkline"><input type="checkbox">Jem receives the Better Proposals email at jem@visture.ca.</label>
+          <label class="checkline"><input type="checkbox">Sent, opened, and signed activity can be observed for later GoHighLevel updates.</label>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside>
+    <div class="rail-card">
+      <div class="rail-head"><strong>POC status</strong></div>
+      <div class="rail-body">
+        <div class="status-row"><span>Server</span><span class="status warn" id="serverStatus">Checking</span></div>
+        <div class="status-row"><span>API token</span><span class="status warn" id="tokenStatus">Checking</span></div>
+        <div class="status-row"><span>Recipient</span><span class="status good">jem@visture.ca</span></div>
+        <div class="status-row"><span>Draft creation</span><span class="status warn" id="draftStatus">Not run</span></div>
+        <div class="status-row"><span>Auto-send</span><span class="status good">Disabled</span></div>
+      </div>
+    </div>
+
+    <div class="rail-card">
+      <div class="rail-head"><strong>What is needed from Better Proposals</strong></div>
+      <div class="rail-body">
+        <div class="checklist">
+          <label class="checkline"><input type="checkbox">Premium or Enterprise plan</label>
+          <label class="checkline"><input type="checkbox">API token stored in <span class="small-code">.env</span></label>
+          <label class="checkline"><input type="checkbox">Visture master template</label>
+          <label class="checkline"><input type="checkbox">Custom merge tags</label>
+          <label class="checkline"><input type="checkbox">Digital Signature block</label>
+          <label class="checkline"><input type="checkbox">JG user and review permissions</label>
+          <label class="checkline"><input type="checkbox">Brand, cover, CAD/GST settings</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="rail-card">
+      <div class="rail-head"><strong>Safety controls</strong></div>
+      <div class="rail-body">
+        <p style="font-size:13px">The token stays server-side. The test email is allowlisted. Duplicate draft requests are suppressed. This POC exposes no approval or send endpoint.</p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<dialog id="outputDialog">
+  <div class="dialog-head"><strong id="dialogTitle">Output</strong><button id="closeDialog" type="button">Close</button></div>
+  <div class="dialog-body"><pre id="dialogOutput"></pre></div>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+
+  const $ = (id) => document.getElementById(id);
+  let health = null;
+  let latestDraft = null;
+
+  function fileNames(input) {
+    return Array.from(input.files || []).map((file) => ({ name: file.name, size: file.size, type: file.type || '' }));
+  }
+
+  function wireFile(inputId, outputId, emptyText) {
+    const input = $(inputId);
+    const output = $(outputId);
+    function render() {
+      const names = fileNames(input).map((file) => file.name);
+      output.textContent = names.length ? names.join(', ') : emptyText;
+    }
+    input.addEventListener('change', render);
+    render();
+  }
+
+  wireFile('siteNotesFiles', 'siteNotesFileList', 'No files selected.');
+  wireFile('voiceFiles', 'voiceFileList', 'No files selected.');
+  wireFile('measurementFiles', 'measurementFileList', 'No files selected.');
+  wireFile('photoFiles', 'photoFileList', 'No photographs selected.');
+
+  function showDialog(title, value) {
+    $('dialogTitle').textContent = title;
+    $('dialogOutput').textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+    $('outputDialog').showModal();
+  }
+
+  $('closeDialog').addEventListener('click', () => $('outputDialog').close());
+
+  function value(id) { return $(id).value.trim(); }
+
+  function intakePayload() {
+    return {
+      intakeId: value('intakeId'),
+      revision: value('revision') || '1',
+      project: {
+        name: value('projectName'),
+        siteAddress: value('siteAddress'),
+      },
+      recipient: {
+        firstName: value('firstName'),
+        lastName: value('lastName'),
+        fullName: [value('firstName'), value('lastName')].filter(Boolean).join(' '),
+        company: value('clientCompany'),
+        email: value('recipientEmail').toLowerCase(),
+        signatureRequired: true,
+      },
+      intake: {
+        siteNotes: value('siteNotes'),
+        siteNoteFiles: fileNames($('siteNotesFiles')),
+        voiceTranscript: value('voiceTranscript'),
+        voiceFiles: fileNames($('voiceFiles')),
+        measurements: value('measurements'),
+        measurementFiles: fileNames($('measurementFiles')),
+        photoNotes: value('photoNotes'),
+        photoFiles: fileNames($('photoFiles')),
+        clientObjectives: value('clientObjectives'),
+        clientConstraints: value('clientConstraints'),
+      },
+      proposal: {
+        summary: value('proposalSummary'),
+        scope: value('scopeOfWork'),
+        pricing: value('pricingSummary'),
+        total: value('proposalTotal'),
+        assumptions: value('assumptions'),
+        exclusions: value('exclusions'),
+        options: value('options'),
+      },
+      betterProposals: {
+        templateId: value('templateIdManual') || value('templateId'),
+        coverId: value('coverId'),
+        brandId: value('brandIdManual') || value('brandId'),
+        documentType: value('documentType') || 'Proposal',
+        currency: value('currency') || 'cad',
+        taxEnabled: value('taxEnabled') === 'true',
+        taxLabel: value('taxLabel') || 'GST',
+        taxAmount: value('taxAmount') || '5',
+      },
+      release: {
+        forJGReview: $('contentReady').checked && $('jgReviewer').checked && $('testRecipientConfirmed').checked,
+        reviewOwner: $('jgReviewer').checked ? 'JG' : '',
+        automaticSend: false,
+      },
+    };
+  }
+
+  function validateForDraft(payload) {
+    const missing = [];
+    if (!payload.intakeId) missing.push('Intake ID');
+    if (!payload.project.name) missing.push('Project name');
+    if (!payload.recipient.firstName) missing.push('Recipient first name');
+    if (!payload.recipient.email) missing.push('Recipient email');
+    if (!payload.intake.siteNotes) missing.push('Site notes');
+    if (!payload.intake.measurements) missing.push('Measurements');
+    if (!payload.intake.clientObjectives) missing.push('Client objectives');
+    if (!payload.intake.clientConstraints) missing.push('Client constraints');
+    if (!payload.proposal.summary) missing.push('Proposal summary');
+    if (!payload.proposal.scope) missing.push('Scope of work');
+    if (!payload.proposal.pricing) missing.push('Pricing summary');
+    if (!payload.betterProposals.templateId) missing.push('Better Proposals template ID');
+    if (!payload.release.forJGReview) missing.push('All three release confirmations');
+    return missing;
+  }
+
+  function loadDemo() {
+    $('projectName').value = 'TEST ONLY - Harbour View Condo Renovation';
+    $('siteAddress').value = '123 Sample Street, Vancouver, BC';
+    $('siteNotes').value = 'Test site visit notes: renovate the kitchen and primary bathroom, replace flooring through the main living areas, protect common corridors, and coordinate all noisy work with building rules. Existing finishes are dated but no visible structural damage was observed during the fictional walkthrough.';
+    $('voiceTranscript').value = 'Test dictation transcript: the client wants a brighter kitchen with more storage, a safer low-threshold shower, durable flooring, and a clear breakdown of allowances and exclusions. Confirm electrical capacity and plumbing routing before final issue.';
+    $('measurements').value = 'Kitchen: 4.8 m x 3.6 m. Primary bathroom: 2.7 m x 2.4 m. Flooring replacement area: approximately 118 sq m. Ceiling height: 2.44 m. All quantities are fictional and for connection testing only.';
+    $('photoNotes').value = 'Fictional photo references: kitchen north wall, island plumbing location, primary bathroom shower, electrical panel, corridor protection route.';
+    $('clientObjectives').value = 'Create a calm, modern long-term home with a larger entertaining kitchen, a safer spa-like primary bathroom, durable finishes, and transparent pricing.';
+    $('clientConstraints').value = 'Test budget target below CAD 350,000 before tax. Condo access and noise restrictions apply. Final appliance loads, slab penetrations, and permit requirements must be confirmed.';
+    $('proposalSummary').value = 'Visture will transform the test condo into a brighter, safer, and more functional long-term home. The proposal clearly separates the core renovation scope, allowances, exclusions, and optional upgrades so the client can make an informed decision without hidden assumptions.';
+    $('scopeOfWork').value = [
+      '1. Pre-construction planning, protection, permits, and site logistics.',
+      '2. Kitchen demolition and complete rebuild, including cabinetry, counters, plumbing, electrical, lighting, and finishes.',
+      '3. Primary bathroom demolition and rebuild with low-threshold shower, waterproofing, tile, fixtures, ventilation, and lighting.',
+      '4. Main-area flooring replacement, baseboards, painting touch-ups, cleanup, and turnover.',
+      '5. Final scope is subject to JG review and confirmation of open technical items.'
+    ].join('\n');
+    $('pricingSummary').value = [
+      'Pre-construction and site protection: CAD 12,500',
+      'Kitchen renovation: CAD 138,000',
+      'Primary bathroom renovation: CAD 68,000',
+      'Flooring and associated finishes: CAD 41,500',
+      'Allowances and contingency: CAD 20,000',
+      'TEST BASE TOTAL: CAD 280,000 before GST'
+    ].join('\n');
+    $('proposalTotal').value = 'CAD 280,000 before GST - TEST ONLY';
+    $('assumptions').value = 'Normal weekday access; existing services can be reused where noted; no concealed hazardous materials; final selections remain within stated allowances.';
+    $('exclusions').value = 'Hazardous-material abatement, structural engineering, appliance supply, strata fees, and work outside the stated rooms unless added by approved change.';
+    $('options').value = 'Optional millwork upgrade: CAD 18,000. Optional smart lighting package: CAD 6,500. Values are fictional.';
+    if (!$('templateId').value && !$('templateIdManual').value) $('templateIdManual').value = health && health.mode === 'live' ? '' : 'MOCK-TEMPLATE-01';
+  }
+
+  $('loadDemo').addEventListener('click', loadDemo);
+  $('showIntake').addEventListener('click', () => showDialog('Simple site intake JSON', intakePayload().intake));
+  $('showPayload').addEventListener('click', () => showDialog('Better Proposals draft request', intakePayload()));
+
+  async function requestJson(url, options) {
+    const response = await fetch(url, options);
+    let data;
+    try { data = await response.json(); }
+    catch (_error) { throw new Error('The server returned an unreadable response.'); }
+    if (!response.ok) throw new Error(data.message || `HTTP ${response.status}`);
+    return data;
+  }
+
+  function statusClass(element, className, text) {
+    element.className = `status ${className}`;
+    element.textContent = text;
+  }
+
+  async function checkHealth() {
+    try {
+      health = await requestJson('/api/health');
+      const live = health.mode === 'live';
+      $('modeBadge').className = `mode-badge ${live ? 'live' : 'mock'}`;
+      $('modeBadge').textContent = live ? 'Live API mode' : 'Mock mode';
+      statusClass($('serverStatus'), 'good', 'Online');
+      statusClass($('tokenStatus'), health.tokenConfigured ? 'good' : 'warn', health.tokenConfigured ? 'Configured' : 'Missing');
+    } catch (error) {
+      statusClass($('serverStatus'), 'bad', 'Offline');
+      statusClass($('tokenStatus'), 'bad', 'Unknown');
+      $('modeBadge').textContent = 'Server unavailable';
+      console.error(error);
+    }
+  }
+
+  function recordName(item, fallback) {
+    if (typeof item === 'string') return item;
+    if (!item || typeof item !== 'object') return fallback;
+    return item.name || item.Name || item.title || item.Title || item.label || item.TypeName || item.CurrencyName || item.tag || fallback;
+  }
+
+  function recordId(item, fallback) {
+    if (typeof item === 'string') return item;
+    if (!item || typeof item !== 'object') return fallback;
+    return String(item.id || item.ID || item.Id || item.TemplateID || item.BrandID || item.TypeID || item.CurrencyID || item.code || item.Code || item.tag || fallback || '');
+  }
+
+  function currencyCode(item, fallback) {
+    if (typeof item === 'string') return item.toLowerCase();
+    if (!item || typeof item !== 'object') return fallback;
+    return String(item.code || item.Code || item.currency_code || item.CurrencyCode || item.iso || item.ISO || item.id || item.ID || fallback || '').toLowerCase();
+  }
+
+  function mergeTagName(item, fallback) {
+    if (typeof item === 'string') return item.replace(/[{}]/g, '');
+    if (!item || typeof item !== 'object') return fallback;
+    return String(item.tag || item.Tag || item.slug || item.Slug || item.name || item.Name || fallback || '').replace(/[{}]/g, '');
+  }
+
+  function setOptions(select, items, blankLabel, preserveValue, valueResolver) {
+    const previous = preserveValue ? select.value : '';
+    select.innerHTML = '';
+    if (blankLabel) {
+      const blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = blankLabel;
+      select.appendChild(blank);
+    }
+    if (Array.isArray(items)) {
+      items.forEach((item, index) => {
+        const option = document.createElement('option');
+        option.value = (valueResolver || recordId)(item, String(index + 1));
+        option.textContent = `${recordName(item, option.value)} [${option.value}]`;
+        select.appendChild(option);
+      });
+    }
+    if (previous && Array.from(select.options).some((option) => option.value === previous)) select.value = previous;
+  }
+
+  async function discover() {
+    const resultBox = $('discoveryResult');
+    resultBox.className = 'result show';
+    resultBox.innerHTML = '<div class="callout">Testing the connection and reading templates, document types, currencies, brands, and merge tags.</div>';
+    try {
+      const data = await requestJson('/api/bp/discover');
+      if (Array.isArray(data.templates)) setOptions($('templateId'), data.templates, 'Select template', false);
+      if (Array.isArray(data.documentTypes)) setOptions($('documentType'), data.documentTypes, '', true);
+      if (Array.isArray(data.currencies)) setOptions($('currency'), data.currencies, '', true, currencyCode);
+      if (Array.isArray(data.brands)) setOptions($('brandId'), data.brands, 'Default brand', false);
+      const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
+      const accountTags = Array.isArray(data.mergeTags) ? data.mergeTags.map((item) => mergeTagName(item, recordName(item, ''))) : [];
+      const missingTags = requiredTags.filter((tag) => !accountTags.includes(tag));
+      resultBox.innerHTML = [
+        `<div class="${missingTags.length ? 'danger-banner' : 'success-banner'}">${missingTags.length ? `Connection succeeded, but ${missingTags.length} required merge tag(s) were not matched.` : 'Connection succeeded and all expected merge tags were matched.'}</div>`,
+        missingTags.length ? `<p><strong>Missing tags:</strong> ${missingTags.join(', ')}</p>` : '',
+        `<p><strong>Mode:</strong> ${data.mode}</p>`,
+        '<button type="button" id="showDiscoveryRaw">View raw discovery response</button>'
+      ].join('');
+      $('showDiscoveryRaw').addEventListener('click', () => showDialog('Better Proposals discovery response', data));
+    } catch (error) {
+      resultBox.innerHTML = `<div class="danger-banner">${error.message}</div>`;
+    }
+  }
+
+  $('discoverButton').addEventListener('click', discover);
+
+  async function createDraft() {
+    const payload = intakePayload();
+    const missing = validateForDraft(payload);
+    const resultBox = $('createResult');
+    resultBox.className = 'result show';
+    if (missing.length) {
+      resultBox.innerHTML = `<div class="danger-banner">Resolve before draft creation: ${missing.join('; ')}.</div>`;
+      return;
+    }
+
+    $('createDraftButton').disabled = true;
+    resultBox.innerHTML = '<div class="callout">Creating a draft only. No email will be sent by this action.</div>';
+    try {
+      const data = await requestJson('/api/bp/create-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      latestDraft = data;
+      const record = data.draft || {};
+      const proposalId = record.proposalId || (record.apiResponse && record.apiResponse.data && (record.apiResponse.data.ProposalID || record.apiResponse.data.id)) || '';
+      const proposalStatus = record.proposalStatus || 'Created; confirm draft status in Better Proposals';
+      const proposalUrl = record.reviewUrl || (record.apiResponse && record.apiResponse.data && (record.apiResponse.data.PreviewURL || record.apiResponse.data.url)) || '';
+      $('proposalId').value = proposalId;
+      $('proposalUrl').value = proposalUrl;
+      statusClass($('draftStatus'), 'good', data.duplicatePrevented ? 'Existing draft reused' : 'Draft created');
+      resultBox.innerHTML = [
+        `<div class="success-banner">${data.duplicatePrevented ? 'Duplicate prevented. The existing draft was returned.' : 'Better Proposals draft created successfully.'}</div>`,
+        `<p><strong>Proposal ID:</strong> <span class="small-code">${proposalId || 'Not returned'}</span></p>`,
+        `<p><strong>Status:</strong> ${proposalStatus}</p>`,
+        `<p><strong>Review link:</strong> ${proposalUrl ? `<a href="${proposalUrl}" target="_blank" rel="noopener noreferrer">Open draft for review</a>` : 'Not returned by the API; open the draft from Documents in Better Proposals.'}</p>`,
+        `<p><strong>Next:</strong> ${data.nextAction}</p>`,
+        `<p><strong>Idempotency key:</strong> <span class="small-code">${data.idempotencyKey}</span></p>`,
+        '<button type="button" id="showDraftRaw">View full response</button>'
+      ].join('');
+      $('showDraftRaw').addEventListener('click', () => showDialog('Draft creation response', data));
+    } catch (error) {
+      statusClass($('draftStatus'), 'bad', 'Failed');
+      resultBox.innerHTML = `<div class="danger-banner">${error.message}</div>`;
+    } finally {
+      $('createDraftButton').disabled = false;
+    }
+  }
+
+  $('createDraftButton').addEventListener('click', createDraft);
+
+  async function checkStatus() {
+    const id = value('proposalId');
+    const resultBox = $('statusResult');
+    resultBox.className = 'result show';
+    if (!id) {
+      resultBox.innerHTML = '<div class="danger-banner">Enter or create a proposal ID first.</div>';
+      return;
+    }
+    resultBox.innerHTML = '<div class="callout">Checking the Better Proposals proposal record.</div>';
+    try {
+      const data = await requestJson(`/api/bp/proposal?id=${encodeURIComponent(id)}`);
+      resultBox.innerHTML = '<div class="success-banner">Proposal record retrieved.</div><button type="button" id="showStatusRaw" style="margin-top:10px">View full status response</button>';
+      $('showStatusRaw').addEventListener('click', () => showDialog('Proposal status response', data));
+    } catch (error) {
+      resultBox.innerHTML = `<div class="danger-banner">${error.message}</div>`;
+    }
+  }
+
+  $('checkStatusButton').addEventListener('click', checkStatus);
+
+  checkHealth();
+})();
+</script>
+</body>
+</html>

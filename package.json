@@ -1,0 +1,13 @@
+{
+  "name": "visture-better-proposals-poc",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Draft-only Better Proposals proof of concept for Visture",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
