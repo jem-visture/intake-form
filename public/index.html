@@ -230,6 +230,17 @@
       overflow-wrap: anywhere;
     }
 
+    .dictation-tools {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .dictation-status { color: var(--muted); font-size: 12px; }
+    .dictation-status.listening { color: var(--blue); font-weight: 600; }
+
     .callout {
       border-left: 4px solid var(--blue);
       background: var(--blue-soft);
@@ -370,7 +381,7 @@
       <h1>Create the draft automatically. Keep approval and sending under human control.</h1>
       <p>This test is intentionally centered on Better Proposals.</p>
       <div class="flow">
-        <div><strong>1. Simple intake</strong>Notes, dictation, measurements, photos, objectives, constraints.</div>
+        <div><strong>1. Simple intake</strong>Typed or dictated notes, measurements, photos, objectives, and constraints.</div>
         <div><strong>2. Proposal content</strong>Use sample estimate and scope content for the integration test.</div>
         <div><strong>3. API draft</strong>Create a Better Proposals draft for JG review.</div>
         <div><strong>4. JG review</strong>Approve inside Better Proposals. No send action exists here.</div>
@@ -395,26 +406,22 @@
     </section>
 
     <section id="intakeSection">
-      <div class="section-head"><span class="number">02</span><h2>Standard site intake</h2><span class="section-note">Only the six source categories from the brief</span></div>
+      <div class="section-head"><span class="number">02</span><h2>Standard site intake</h2><span class="section-note">Focused site information</span></div>
       <div class="section-body">
-        <div class="callout">Files selected here remain in the browser. This POC records their filenames and text summaries; a later GoHighLevel or Drive step will handle permanent file storage.</div>
+        <div class="callout">Use the microphone control to dictate directly into Site notes. Photograph files remain in the browser; a later GoHighLevel or Drive step will handle permanent storage.</div>
         <div class="grid g2">
-          <div class="upload-card">
-            <div class="field"><label>Site notes <span class="required">*</span></label><input id="siteNotesFiles" type="file" multiple accept=".txt,.md,.doc,.docx,.pdf,image/*"></div>
-            <div class="file-list" id="siteNotesFileList">No files selected.</div>
-            <textarea id="siteNotes" placeholder="Paste or type the site notes."></textarea>
+          <div class="field">
+            <label>Site notes <span class="required">*</span></label>
+            <textarea id="siteNotes" class="tall" placeholder="Type site notes or use voice dictation."></textarea>
+            <div class="dictation-tools">
+              <button id="dictationButton" type="button">Start dictation</button>
+              <span id="dictationStatus" class="dictation-status">Microphone is off.</span>
+            </div>
           </div>
 
-          <div class="upload-card">
-            <div class="field"><label>Voice dictation</label><input id="voiceFiles" type="file" multiple accept="audio/*,.txt,.doc,.docx,.pdf"></div>
-            <div class="file-list" id="voiceFileList">No files selected.</div>
-            <textarea id="voiceTranscript" placeholder="Paste the transcript, or note that transcription is pending."></textarea>
-          </div>
-
-          <div class="upload-card">
-            <div class="field"><label>Measurements <span class="required">*</span></label><input id="measurementFiles" type="file" multiple accept=".csv,.xlsx,.xls,.pdf,image/*,.txt"></div>
-            <div class="file-list" id="measurementFileList">No files selected.</div>
-            <textarea id="measurements" placeholder="List room dimensions, quantities, areas, or drawing references."></textarea>
+          <div class="field">
+            <label>Measurements <span class="required">*</span></label>
+            <textarea id="measurements" class="tall" placeholder="List room dimensions, quantities, areas, or drawing references."></textarea>
           </div>
 
           <div class="upload-card">
@@ -584,10 +591,65 @@
     render();
   }
 
-  wireFile('siteNotesFiles', 'siteNotesFileList', 'No files selected.');
-  wireFile('voiceFiles', 'voiceFileList', 'No files selected.');
-  wireFile('measurementFiles', 'measurementFileList', 'No files selected.');
   wireFile('photoFiles', 'photoFileList', 'No photographs selected.');
+
+  function setupDictation() {
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const button = $('dictationButton');
+    const status = $('dictationStatus');
+    if (!Recognition) {
+      button.disabled = true;
+      status.textContent = 'Voice dictation is not supported in this browser. You can still type notes.';
+      return;
+    }
+
+    const recognition = new Recognition();
+    recognition.lang = 'en-CA';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    let listening = false;
+    let startingText = '';
+    let finalTranscript = '';
+
+    recognition.addEventListener('start', () => {
+      listening = true;
+      startingText = value('siteNotes');
+      finalTranscript = '';
+      button.textContent = 'Stop dictation';
+      status.textContent = 'Listening… speak your site notes.';
+      status.className = 'dictation-status listening';
+    });
+
+    recognition.addEventListener('result', (event) => {
+      let interimTranscript = '';
+      for (let index = event.resultIndex; index < event.results.length; index += 1) {
+        const transcript = event.results[index][0].transcript.trim();
+        if (event.results[index].isFinal) finalTranscript += `${transcript} `;
+        else interimTranscript += `${transcript} `;
+      }
+      $('siteNotes').value = [startingText, finalTranscript.trim(), interimTranscript.trim()].filter(Boolean).join(' ');
+    });
+
+    recognition.addEventListener('error', (event) => {
+      const denied = event.error === 'not-allowed' || event.error === 'service-not-allowed';
+      status.textContent = denied ? 'Microphone access was not allowed.' : `Dictation stopped: ${event.error}.`;
+      status.className = 'dictation-status';
+    });
+
+    recognition.addEventListener('end', () => {
+      listening = false;
+      button.textContent = 'Start dictation';
+      if (status.classList.contains('listening')) status.textContent = 'Microphone is off.';
+      status.className = 'dictation-status';
+    });
+
+    button.addEventListener('click', () => {
+      if (listening) recognition.stop();
+      else recognition.start();
+    });
+  }
+
+  setupDictation();
 
   function showDialog(title, value) {
     $('dialogTitle').textContent = title;
@@ -625,11 +687,7 @@
       },
       intake: {
         siteNotes: value('siteNotes'),
-        siteNoteFiles: fileNames($('siteNotesFiles')),
-        voiceTranscript: value('voiceTranscript'),
-        voiceFiles: fileNames($('voiceFiles')),
         measurements: value('measurements'),
-        measurementFiles: fileNames($('measurementFiles')),
         photoNotes: value('photoNotes'),
         photoFiles: fileNames($('photoFiles')),
         clientObjectives: value('clientObjectives'),
@@ -684,7 +742,7 @@
     $('projectName').value = 'TEST ONLY - Harbour View Condo Renovation';
     $('siteAddress').value = '123 Sample Street, Vancouver, BC';
     $('siteNotes').value = 'Test site visit notes: renovate the kitchen and primary bathroom, replace flooring through the main living areas, protect common corridors, and coordinate all noisy work with building rules. Existing finishes are dated but no visible structural damage was observed during the fictional walkthrough.';
-    $('voiceTranscript').value = 'Test dictation transcript: the client wants a brighter kitchen with more storage, a safer low-threshold shower, durable flooring, and a clear breakdown of allowances and exclusions. Confirm electrical capacity and plumbing routing before final issue.';
+    $('siteNotes').value += ' Dictated note: the client wants a brighter kitchen with more storage, a safer low-threshold shower, durable flooring, and a clear breakdown of allowances and exclusions. Confirm electrical capacity and plumbing routing before final issue.';
     $('measurements').value = 'Kitchen: 4.8 m x 3.6 m. Primary bathroom: 2.7 m x 2.4 m. Flooring replacement area: approximately 118 sq m. Ceiling height: 2.44 m. All quantities are fictional and for connection testing only.';
     $('photoNotes').value = 'Fictional photo references: kitchen north wall, island plumbing location, primary bathroom shower, electrical panel, corridor protection route.';
     $('clientObjectives').value = 'Create a calm, modern long-term home with a larger entertaining kitchen, a safer spa-like primary bathroom, durable finishes, and transparent pricing.';

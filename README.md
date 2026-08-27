@@ -13,8 +13,7 @@ This package tests the most important workflow in JG's investigation brief:
 
 The intake is intentionally limited to:
 
-- Site notes
-- Voice dictation or transcript
+- Site notes, entered by typing or in-browser voice dictation
 - Measurements
 - Photographs
 - Client objectives
