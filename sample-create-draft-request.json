@@ -6,11 +6,11 @@
     "siteAddress": "123 Sample Street, Vancouver, BC"
   },
   "recipient": {
-    "firstName": "Jem",
+    "firstName": "Test",
     "lastName": "",
-    "fullName": "Jem",
+    "fullName": "Test Recipient",
     "company": "Visture",
-    "email": "jem@visture.ca",
+    "email": "test-recipient@example.com",
     "signatureRequired": true
   },
   "intake": {

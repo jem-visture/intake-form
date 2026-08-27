@@ -35,15 +35,6 @@ const PORT = Number(process.env.PORT || 8787);
 const API_BASE = String(process.env.BP_API_BASE || 'https://api.betterproposals.io').replace(/\/+$/, '');
 const TOKEN = String(process.env.BETTER_PROPOSALS_API_TOKEN || '').trim();
 const MODE = String(process.env.BP_MODE || (TOKEN ? 'live' : 'mock')).toLowerCase();
-const POC_TEST_RECIPIENT = 'jem@visture.ca';
-const CONFIGURED_RECIPIENTS = String(process.env.TEST_RECIPIENT_EMAILS || POC_TEST_RECIPIENT)
-  .split(',')
-  .map((email) => email.trim().toLowerCase())
-  .filter(Boolean);
-if (CONFIGURED_RECIPIENTS.length !== 1 || CONFIGURED_RECIPIENTS[0] !== POC_TEST_RECIPIENT) {
-  throw new Error(`This POC only permits the test recipient ${POC_TEST_RECIPIENT}.`);
-}
-const ALLOWED_RECIPIENTS = [POC_TEST_RECIPIENT];
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(DRAFTS_FILE)) fs.writeFileSync(DRAFTS_FILE, '{}\n');
@@ -265,9 +256,6 @@ function buildCreateForm(body) {
 function validateCreateRequest(body) {
   if (!body || typeof body !== 'object') throw new Error('Request body is required.');
   const recipientEmail = cleanEmail(body.recipient && body.recipient.email);
-  if (!ALLOWED_RECIPIENTS.includes(recipientEmail)) {
-    throw new Error(`Recipient ${recipientEmail} is not on the POC allowlist.`);
-  }
   if (!body.release || body.release.forJGReview !== true) {
     throw new Error('The release-for-JG-review confirmation is required.');
   }
@@ -453,7 +441,7 @@ async function requestHandler(req, res) {
         ok: true,
         mode: MODE,
         tokenConfigured: Boolean(TOKEN),
-        allowedRecipients: ALLOWED_RECIPIENTS,
+        recipientPolicy: 'The validated email entered in the intake form is used as the document recipient.',
         sendAutomationAvailable: false,
       });
       return;
@@ -490,7 +478,7 @@ async function requestHandler(req, res) {
 
     json(res, 404, { status: 'error', message: 'Not found.' });
   } catch (error) {
-    const statusCode = /required|valid|allowlist|unsupported|missing|must/i.test(safeMessage(error)) ? 400 : 502;
+    const statusCode = /required|valid|unsupported|missing|must/i.test(safeMessage(error)) ? 400 : 502;
     json(res, statusCode, {
       status: 'error',
       message: safeMessage(error),
@@ -503,7 +491,7 @@ if (require.main === module) {
   const server = http.createServer(requestHandler);
   server.listen(PORT, () => {
     console.log(`Visture Better Proposals POC running at http://localhost:${PORT}`);
-    console.log(`Mode: ${MODE}. Allowed recipient(s): ${ALLOWED_RECIPIENTS.join(', ')}`);
+    console.log(`Mode: ${MODE}. Recipient email is supplied by the intake form.`);
     if (MODE !== 'live') console.log('Add BETTER_PROPOSALS_API_TOKEN to .env and set BP_MODE=live for a real connection.');
   });
 }

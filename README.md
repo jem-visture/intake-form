@@ -8,7 +8,7 @@ This package tests the most important workflow in JG's investigation brief:
 2. Prepare test proposal content.
 3. Create a branded Better Proposals draft through the API.
 4. Hold the document for JG's final review.
-5. Let an authorized human send it to the test customer, Jem at `jem@visture.ca`.
+5. Let an authorized human send it to the test recipient entered in the intake form.
 6. Observe sent, opened, and signed activity for later GoHighLevel updates.
 
 The intake is intentionally limited to:
@@ -46,7 +46,7 @@ Even with Manager Approvals, Better Proposals' documented flow requires an autho
 - `.env.example` - environment-variable template. It contains no real secret.
 - `BETTER_PROPOSALS_SETUP_CHECKLIST.md` - exact account items needed.
 - `TEMPLATE_MAPPING.md` - custom merge-tag and template design.
-- `TEST_SCRIPT.md` - acceptance-test steps for JG and Jem.
+- `TEST_SCRIPT.md` - acceptance-test steps for JG and the entered test recipient.
 - `sample-create-draft-request.json` - sample payload shape.
 - `test.js` - automated mock-mode safety test.
 
@@ -81,9 +81,9 @@ Requires Node.js 18 or newer.
 1. Copy `.env.example` to `.env`.
 2. Set `BP_MODE=live`.
 3. Add the Better Proposals API token to `BETTER_PROPOSALS_API_TOKEN`.
-4. Keep `TEST_RECIPIENT_EMAILS=jem@visture.ca` during the POC.
-5. Start the server with `node server.js`.
-6. Open `http://localhost:8787`.
+4. Start the server with `node server.js`.
+5. Open `http://localhost:8787`.
+6. Enter and confirm the intended test recipient email.
 7. Use `Test connection and discover account` before creating a draft.
 
 Do not paste the API token into ChatGPT, the browser form, source code, screenshots, email, or GoHighLevel fields. Store it only in the server-side `.env` file or a secure secret manager.
@@ -97,7 +97,6 @@ The repository includes a Vercel Function adapter in `api/index.mjs` and routing
 3. In Vercel under `Project Settings > Environment Variables`, add:
    - `BP_MODE` = `live`
    - `BETTER_PROPOSALS_API_TOKEN` = the secret token
-   - `TEST_RECIPIENT_EMAILS` = `jem@visture.ca`
    - `BP_API_BASE` = `https://api.betterproposals.io`
 4. Apply the token to only the Vercel environments that should be allowed to access the live Better Proposals account.
 5. Deploy, then use account discovery before creating a draft.
@@ -116,15 +115,15 @@ Never commit `.env`. Vercel Functions have ephemeral local storage, so the local
 8. On Enterprise, have the creator select `Request Approval`, then have JG approve it under `Documents > Pending`.
 9. On Premium, have JG perform the same review manually without the native approval button.
 10. After JG approves, have an authorized user click `Send Document`.
-11. Confirm delivery to `jem@visture.ca`.
-12. Jem opens and signs the test proposal.
+11. Confirm delivery to the entered test recipient.
+12. The test recipient opens and signs the test proposal.
 13. Confirm Better Proposals reports sent, opened, and signed activity.
 14. Add Zapier status triggers only after this core path passes.
 
 ## Safety controls built into the connector
 
 - The API token never reaches the browser.
-- The default recipient allowlist contains only `jem@visture.ca`.
+- The server validates the recipient email entered in the intake form.
 - The connector creates drafts only.
 - There is no approve endpoint.
 - There is no send endpoint.

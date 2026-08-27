@@ -339,13 +339,13 @@
     <div class="hero">
       <div class="eyebrow">POC acceptance path</div>
       <h1>Create the draft automatically. Keep approval and sending under human control.</h1>
-      <p>This test is intentionally centered on Better Proposals. The intake is reduced to the source material named in JG's brief, and the test recipient is Jem at <strong>jem@visture.ca</strong>.</p>
+      <p>This test is intentionally centered on Better Proposals.</p>
       <div class="flow">
         <div><strong>1. Simple intake</strong>Notes, dictation, measurements, photos, objectives, constraints.</div>
         <div><strong>2. Proposal content</strong>Use sample estimate and scope content for the integration test.</div>
         <div><strong>3. API draft</strong>Create a Better Proposals draft for JG review.</div>
         <div><strong>4. JG review</strong>Approve inside Better Proposals. No send action exists here.</div>
-        <div><strong>5. Human send</strong>Authorized user clicks Send Document to Jem.</div>
+        <div><strong>5. Human send</strong>An authorized user sends the reviewed document to the entered recipient.</div>
       </div>
     </div>
 
@@ -357,10 +357,10 @@
           <div class="field"><label>Revision <span class="required">*</span></label><input id="revision" value="1"></div>
           <div class="field"><label>Project name <span class="required">*</span></label><input id="projectName" placeholder="POC Test Renovation"></div>
           <div class="field"><label>Site address</label><input id="siteAddress" placeholder="Test address only"></div>
-          <div class="field"><label>Client first name <span class="required">*</span></label><input id="firstName" value="Jem"></div>
+          <div class="field"><label>Client first name <span class="required">*</span></label><input id="firstName" placeholder="Recipient first name"></div>
           <div class="field"><label>Client last name</label><input id="lastName" placeholder="Optional for test"></div>
           <div class="field"><label>Client company</label><input id="clientCompany" value="Visture"></div>
-          <div class="field"><label>Test recipient email <span class="required">*</span></label><input id="recipientEmail" type="email" value="jem@visture.ca"><span class="hint">The server allowlists this address to prevent accidental sends or drafts to other recipients during testing.</span></div>
+          <div class="field"><label>Test recipient email <span class="required">*</span></label><input id="recipientEmail" type="email" placeholder="recipient@example.com"><span class="hint">This address is attached to the draft and will receive the document only if an authorized human later sends it from Better Proposals.</span></div>
         </div>
       </div>
     </section>
@@ -442,7 +442,7 @@
         <div class="checklist">
           <label class="checkline"><input id="contentReady" type="checkbox">The sample scope and pricing are ready to be used for a test draft.</label>
           <label class="checkline"><input id="jgReviewer" type="checkbox">JG is the designated final reviewer.</label>
-          <label class="checkline"><input id="testRecipientConfirmed" type="checkbox">I confirm the only test recipient is jem@visture.ca.</label>
+          <label class="checkline"><input id="testRecipientConfirmed" type="checkbox">I confirm the entered test recipient email is correct.</label>
         </div>
         <div class="actions"><button id="createDraftButton" class="good" type="button">Create Better Proposals draft</button></div>
         <div id="createResult" class="result"></div>
@@ -459,7 +459,7 @@
               <li>The creator opens the API-created draft and selects <strong>Request Approval</strong>.</li>
               <li>JG opens the item under <strong>Documents &gt; Pending</strong> and approves or denies it.</li>
               <li>After approval, an authorized user opens the approved item and clicks <strong>Send Document</strong>.</li>
-              <li>Jem receives the proposal at <strong>jem@visture.ca</strong> and completes the signature test.</li>
+              <li>The entered recipient receives the proposal and completes the signature test.</li>
             </ol>
           </div>
           <div>
@@ -484,7 +484,7 @@
           <label class="checkline"><input type="checkbox">Merge-tag content appears in the correct sections without broken formatting.</label>
           <label class="checkline"><input type="checkbox">JG can review the full proposal before it is sent.</label>
           <label class="checkline"><input type="checkbox">The proposal cannot bypass the intended approval controls.</label>
-          <label class="checkline"><input type="checkbox">Jem receives the Better Proposals email at jem@visture.ca.</label>
+          <label class="checkline"><input type="checkbox">The entered recipient receives the Better Proposals email.</label>
           <label class="checkline"><input type="checkbox">Sent, opened, and signed activity can be observed for later GoHighLevel updates.</label>
         </div>
       </div>
@@ -497,7 +497,7 @@
       <div class="rail-body">
         <div class="status-row"><span>Server</span><span class="status warn" id="serverStatus">Checking</span></div>
         <div class="status-row"><span>API token</span><span class="status warn" id="tokenStatus">Checking</span></div>
-        <div class="status-row"><span>Recipient</span><span class="status good">jem@visture.ca</span></div>
+        <div class="status-row"><span>Recipient</span><span class="status warn" id="recipientStatus">Not set</span></div>
         <div class="status-row"><span>Draft creation</span><span class="status warn" id="draftStatus">Not run</span></div>
         <div class="status-row"><span>Auto-send</span><span class="status good">Disabled</span></div>
       </div>
@@ -521,7 +521,7 @@
     <div class="rail-card">
       <div class="rail-head"><strong>Safety controls</strong></div>
       <div class="rail-body">
-        <p style="font-size:13px">The token stays server-side. The test email is allowlisted. Duplicate draft requests are suppressed. This POC exposes no approval or send endpoint.</p>
+        <p style="font-size:13px">The token stays server-side. The recipient email is validated. Duplicate draft requests are suppressed. This POC exposes no approval or send endpoint.</p>
       </div>
     </div>
   </aside>
@@ -569,6 +569,14 @@
   $('closeDialog').addEventListener('click', () => $('outputDialog').close());
 
   function value(id) { return $(id).value.trim(); }
+
+  function updateRecipientStatus() {
+    const email = value('recipientEmail').toLowerCase();
+    statusClass($('recipientStatus'), email ? 'good' : 'warn', email || 'Not set');
+  }
+
+  $('recipientEmail').addEventListener('input', updateRecipientStatus);
+  updateRecipientStatus();
 
   function intakePayload() {
     return {

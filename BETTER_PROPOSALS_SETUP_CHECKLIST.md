@@ -13,7 +13,7 @@
 - [ ] Currency, normally `CAD`.
 - [ ] GST setting, label, and percentage.
 - [ ] A Digital Signature block inside the template.
-- [ ] Jem is marked eligible or required to sign.
+- [ ] The entered test recipient is marked eligible or required to sign.
 - [ ] JG's Better Proposals user email.
 - [ ] Confirmation that JG can access and review API-created drafts.
 - [ ] On Enterprise, the creator or automation user is configured to require Sending Approval from JG.
@@ -40,8 +40,8 @@ Create these under `Settings > Setup > Custom Merge Tags` and place them in the 
 ## Test recipient
 
 ```text
-First name: Jem
-Email: jem@visture.ca
+First name: Enter the intended test recipient's first name
+Email: Enter the intended test recipient's email
 Required to sign: Yes
 Purpose: Internal proof-of-concept recipient only
 ```
@@ -63,4 +63,4 @@ Screenshots may be provided with any token or secret fully redacted:
 - [ ] Do not paste the API token into ChatGPT.
 - [ ] Do not place the token in the HTML page.
 - [ ] Do not commit `.env` to source control.
-- [ ] Do not use a real customer email while the allowlist is set to the POC recipient.
+- [ ] Confirm the entered recipient carefully before creating the draft and before any later manual send.

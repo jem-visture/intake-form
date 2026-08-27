@@ -2,7 +2,7 @@
 
 ## Test objective
 
-Prove that approved sample content can create a Better Proposals draft, that JG can review it before delivery, and that the final proposal can be sent to and signed by Jem at `jem@visture.ca`.
+Prove that approved sample content can create a Better Proposals draft, that JG can review it before delivery, and that the final proposal can be sent to and signed by the recipient entered in the intake form.
 
 ## Test 1: Connection and discovery
 
@@ -22,7 +22,7 @@ Pass condition: the Visture template and required account settings can be select
 
 - [ ] Load the sample intake and proposal.
 - [ ] Select the Visture template and settings.
-- [ ] Confirm `jem@visture.ca` as the only recipient.
+- [ ] Confirm the entered test recipient email is correct.
 - [ ] Check all three release confirmations.
 - [ ] Create the draft.
 - [ ] Confirm that the API returns success.
@@ -45,7 +45,7 @@ Pass condition: exactly one unsent Better Proposals draft exists for the test re
 - [ ] Confirm assumptions, exclusions, and options.
 - [ ] Confirm there are no visible raw merge tags.
 - [ ] Confirm the Digital Signature block exists.
-- [ ] Confirm Jem is eligible or required to sign.
+- [ ] Confirm the entered recipient is eligible or required to sign.
 
 Pass condition: the draft is client-presentable after normal JG review and minor edits.
 
@@ -71,10 +71,10 @@ Pass condition: the intended workflow cannot send the proposal without JG's revi
 ## Test 5: Delivery and signature
 
 - [ ] Authorized user clicks `Send Document` after approval.
-- [ ] Jem receives the email at `jem@visture.ca`.
-- [ ] Jem opens the proposal.
+- [ ] The entered recipient receives the email.
+- [ ] The entered recipient opens the proposal.
 - [ ] Better Proposals records the open event.
-- [ ] Jem signs the proposal.
+- [ ] The entered recipient signs the proposal.
 - [ ] Better Proposals records the signed event.
 - [ ] Confirm the signed document is locked as expected.
 

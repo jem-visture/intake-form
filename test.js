@@ -42,7 +42,6 @@ async function main() {
       PORT: String(PORT),
       BP_MODE: 'mock',
       BETTER_PROPOSALS_API_TOKEN: '',
-      TEST_RECIPIENT_EMAILS: 'jem@visture.ca',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -90,15 +89,15 @@ async function main() {
     });
     assert(blocked.response.status === 405, 'Send endpoint should be blocked.');
 
-    const wrongRecipient = JSON.parse(JSON.stringify(sample));
-    wrongRecipient.intakeId = `VST-BP-TEST-WRONG-${Date.now()}`;
-    wrongRecipient.recipient.email = 'customer@example.com';
-    const rejected = await request('/api/bp/create-draft', {
+    const alternateRecipient = JSON.parse(JSON.stringify(sample));
+    alternateRecipient.intakeId = `VST-BP-TEST-ALTERNATE-${Date.now()}`;
+    alternateRecipient.recipient.email = 'alternate-recipient@example.com';
+    const accepted = await request('/api/bp/create-draft', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(wrongRecipient),
+      body: JSON.stringify(alternateRecipient),
     });
-    assert(rejected.response.status === 400, 'Non-allowlisted recipient should be rejected.');
+    assert(accepted.response.ok, 'The valid recipient entered in the form should be accepted.');
 
     console.log('All mock-mode POC tests passed.');
   } finally {
