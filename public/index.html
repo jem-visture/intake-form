@@ -591,25 +591,8 @@
       </div>
     </section>
 
-    <section id="connectionSection">
-      <div class="section-head"><span class="number">04</span><h2>Better Proposals account mapping</h2><span class="section-note">Discovered through the connected account</span></div>
-      <div class="section-body">
-        <div class="callout good"><strong>Recommended:</strong> use the direct Better Proposals API for draft creation because it accepts custom merge tags. Use Zapier later for Proposal Sent, Opened, and Signed status events.</div>
-        <div class="actions" style="margin-top:0;margin-bottom:14px"><button id="discoverButton" class="primary" type="button">Test connection and discover account</button></div>
-        <div class="grid g3">
-          <div class="field"><label>Template ID <span class="required">*</span></label><select id="templateId"><option value="">Discover or enter below</option></select><input id="templateIdManual" placeholder="Manual template ID"></div>
-          <div class="field"><label>Cover ID</label><input id="coverId" placeholder="Optional cover ID"></div>
-          <div class="field"><label>Brand ID</label><select id="brandId"><option value="">Default brand</option></select><input id="brandIdManual" placeholder="Manual brand ID"></div>
-          <div class="field"><label>Document type</label><select id="documentType"><option>Proposal</option></select></div>
-          <div class="field"><label>Currency</label><select id="currency"><option value="cad">CAD</option></select></div>
-          <div class="field"><label>Tax</label><div class="grid g2"><select id="taxEnabled"><option value="true">Apply tax</option><option value="false">No tax</option></select><input id="taxAmount" type="number" value="5" min="0" step="0.01"></div><input id="taxLabel" value="GST"></div>
-        </div>
-        <div id="discoveryResult" class="result"></div>
-      </div>
-    </section>
-
     <section id="draftSection">
-      <div class="section-head"><span class="number">05</span><h2>Create draft for JG review</h2><span class="section-note">Draft creation is the only write action</span></div>
+      <div class="section-head"><span class="number">04</span><h2>Create draft for JG review</h2><span class="section-note">Draft creation is the only write action</span></div>
       <div class="section-body">
         <div class="callout warn"><strong>Important:</strong> this releases a draft to Better Proposals. It does not represent JG's final approval and cannot send the proposal.</div>
         <div class="checklist">
@@ -623,7 +606,7 @@
     </section>
 
     <section id="approvalSection">
-      <div class="section-head"><span class="number">06</span><h2>Preview and JG approval</h2><span class="section-note">Review here; native approval in Better Proposals</span></div>
+      <div class="section-head"><span class="number">05</span><h2>Preview and JG approval</h2><span class="section-note">Review here; native approval in Better Proposals</span></div>
       <div class="section-body">
         <div class="callout warn"><strong>Approval boundary:</strong> recording JG's decision here does not call a Better Proposals approval or send action. Native Manager Approval must still be completed by JG inside Better Proposals.</div>
 
@@ -1010,16 +993,6 @@
         exclusions: value('exclusions'),
         options: value('options'),
       },
-      betterProposals: {
-        templateId: value('templateIdManual') || value('templateId'),
-        coverId: value('coverId'),
-        brandId: value('brandIdManual') || value('brandId'),
-        documentType: value('documentType') || 'Proposal',
-        currency: value('currency') || 'cad',
-        taxEnabled: value('taxEnabled') === 'true',
-        taxLabel: value('taxLabel') || 'GST',
-        taxAmount: value('taxAmount') || '5',
-      },
       release: {
         forJGReview: $('contentReady').checked && $('jgReviewer').checked && $('testRecipientConfirmed').checked,
         reviewOwner: $('jgReviewer').checked ? 'JG' : '',
@@ -1048,9 +1021,8 @@
     });
     if (!(payload.proposal.laborEstimate.hours > 0)) missing.push('Estimated total labour hours');
     if (!(payload.proposal.laborEstimate.hourlyRate > 0)) missing.push('Labour rate per hour');
-    if (!payload.betterProposals.templateId) missing.push('Better Proposals template ID');
     if (!health) missing.push('Completed server health check');
-    if (health && health.mode === 'live' && !discoveryPassed) missing.push('Successful Better Proposals account discovery');
+    if (!discoveryPassed) missing.push('Ready backend Better Proposals configuration');
     if (!payload.release.forJGReview) missing.push('All three release confirmations');
     return missing;
   }
@@ -1104,7 +1076,6 @@
     $('assumptions').value = 'Normal weekday access; existing services can be reused where noted; no concealed hazardous materials; final selections remain within stated allowances.';
     $('exclusions').value = 'Hazardous-material abatement, structural engineering, appliance supply, strata fees, and work outside the stated rooms unless added by approved change.';
     $('options').value = 'Optional millwork upgrade: CAD 18,000. Optional smart lighting package: CAD 6,500. Values are fictional.';
-    if (!$('templateId').value && !$('templateIdManual').value) $('templateIdManual').value = health && health.mode === 'live' ? '' : 'MOCK-TEMPLATE-01';
     updateRecipientStatus();
   }
 
@@ -1296,86 +1267,19 @@
     }
   }
 
-  function recordName(item, fallback) {
-    if (typeof item === 'string') return item;
-    if (!item || typeof item !== 'object') return fallback;
-    return item.name || item.Name || item.title || item.Title || item.label || item.TypeName || item.CurrencyName || item.tag || fallback;
-  }
-
-  function recordId(item, fallback) {
-    if (typeof item === 'string') return item;
-    if (!item || typeof item !== 'object') return fallback;
-    return String(item.id || item.ID || item.Id || item.TemplateID || item.BrandID || item.TypeID || item.CurrencyID || item.code || item.Code || item.tag || fallback || '');
-  }
-
-  function currencyCode(item, fallback) {
-    if (typeof item === 'string') return item.toLowerCase();
-    if (!item || typeof item !== 'object') return fallback;
-    return String(item.code || item.Code || item.currency_code || item.CurrencyCode || item.iso || item.ISO || item.id || item.ID || fallback || '').toLowerCase();
-  }
-
-  function mergeTagName(item, fallback) {
-    if (typeof item === 'string') return item.replace(/[{}]/g, '');
-    if (!item || typeof item !== 'object') return fallback;
-    return String(item.tag || item.Tag || item.slug || item.Slug || item.name || item.Name || fallback || '').replace(/[{}]/g, '');
-  }
-
-  function setOptions(select, items, blankLabel, preserveValue, valueResolver) {
-    const previous = preserveValue ? select.value : '';
-    select.innerHTML = '';
-    if (blankLabel) {
-      const blank = document.createElement('option');
-      blank.value = '';
-      blank.textContent = blankLabel;
-      select.appendChild(blank);
-    }
-    if (Array.isArray(items)) {
-      items.forEach((item, index) => {
-        const option = document.createElement('option');
-        option.value = (valueResolver || recordId)(item, String(index + 1));
-        option.textContent = `${recordName(item, option.value)} [${option.value}]`;
-        select.appendChild(option);
-      });
-    }
-    if (previous && Array.from(select.options).some((option) => option.value === previous)) select.value = previous;
-  }
-
   async function discover() {
-    const resultBox = $('discoveryResult');
     discoveryPassed = false;
     statusClass($('connectionStatus'), 'warn', 'Testing');
-    resultBox.className = 'result show';
-    resultBox.innerHTML = '<div class="callout">Testing the connection and reading templates, document types, currencies, brands, and merge tags.</div>';
     try {
       const data = await requestJson('/api/bp/discover');
-      if (Array.isArray(data.templates)) setOptions($('templateId'), data.templates, 'Select template', false);
-      if (Array.isArray(data.documentTypes)) setOptions($('documentType'), data.documentTypes, '', true);
-      if (Array.isArray(data.currencies)) setOptions($('currency'), data.currencies, '', true, currencyCode);
-      if (Array.isArray(data.brands)) setOptions($('brandId'), data.brands, 'Default brand', false);
-      const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','estimate_grouping','client_specifications','material_pricing','material_subtotal','labour_pricing','labour_hours','labour_hourly_rate','labour_total','estimate_subtotal','allowances','quote_pending_items','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
-      const accountTags = Array.isArray(data.mergeTags) ? data.mergeTags.map((item) => mergeTagName(item, recordName(item, ''))) : [];
-      const missingTags = requiredTags.filter((tag) => !accountTags.includes(tag));
-      const coreListsReady = Array.isArray(data.templates) && data.templates.length > 0
-        && Array.isArray(data.documentTypes) && data.documentTypes.length > 0
-        && Array.isArray(data.currencies) && data.currencies.length > 0;
-      discoveryPassed = coreListsReady && missingTags.length === 0;
+      discoveryPassed = data.ready === true;
       statusClass($('connectionStatus'), discoveryPassed ? 'good' : 'bad', discoveryPassed ? 'Ready' : 'Needs setup');
-      resultBox.innerHTML = [
-        `<div class="${discoveryPassed ? 'success-banner' : 'danger-banner'}">${discoveryPassed ? 'Connection succeeded. Core account lists and all expected merge tags are ready.' : 'Account discovery completed, but the connection is not ready for draft creation.'}</div>`,
-        !coreListsReady ? '<p><strong>Required:</strong> at least one template, document type, and currency must be returned.</p>' : '',
-        missingTags.length ? `<p><strong>Missing tags:</strong> ${missingTags.join(', ')}</p>` : '',
-        `<p><strong>Mode:</strong> ${data.mode}</p>`,
-        '<button type="button" id="showDiscoveryRaw">View raw discovery response</button>'
-      ].join('');
-      $('showDiscoveryRaw').addEventListener('click', () => showDialog('Better Proposals discovery response', data));
     } catch (error) {
       discoveryPassed = false;
       statusClass($('connectionStatus'), 'bad', 'Failed');
-      resultBox.innerHTML = `<div class="danger-banner">${error.message}</div>`;
+      console.error(error);
     }
   }
-
-  $('discoverButton').addEventListener('click', discover);
 
   async function createDraft() {
     const payload = intakePayload();
@@ -1449,7 +1353,12 @@
   $('markApprovedButton').addEventListener('click', () => recordReviewDecision('approved'));
   $('markChangesButton').addEventListener('click', () => recordReviewDecision('changes_requested'));
 
-  checkHealth();
+  async function initialize() {
+    await checkHealth();
+    await discover();
+  }
+
+  initialize();
 })();
 </script>
 </body>

@@ -35,6 +35,24 @@ const PORT = Number(process.env.PORT || 8787);
 const API_BASE = String(process.env.BP_API_BASE || 'https://api.betterproposals.io').replace(/\/+$/, '');
 const TOKEN = String(process.env.BETTER_PROPOSALS_API_TOKEN || '').trim();
 const MODE = String(process.env.BP_MODE || (TOKEN ? 'live' : 'mock')).toLowerCase();
+const BP_CONFIG = Object.freeze({
+  templateId: String(process.env.BP_TEMPLATE_ID || '744153').trim(),
+  coverId: String(process.env.BP_COVER_ID || '').trim(),
+  brandId: String(process.env.BP_BRAND_ID || '').trim(),
+  documentType: String(process.env.BP_DOCUMENT_TYPE || 'Proposal').trim(),
+  currency: String(process.env.BP_CURRENCY || 'cad').trim().toLowerCase(),
+  taxEnabled: String(process.env.BP_TAX_ENABLED || 'true').toLowerCase() === 'true',
+  taxLabel: String(process.env.BP_TAX_LABEL || 'GST').trim(),
+  taxAmount: String(process.env.BP_TAX_AMOUNT || '5').trim(),
+});
+const REQUIRED_MERGE_TAGS = [
+  'project_name', 'site_address', 'client_objectives', 'client_constraints',
+  'proposal_summary', 'scope_of_work', 'estimate_grouping', 'client_specifications',
+  'material_pricing', 'material_subtotal', 'labour_pricing', 'labour_hours',
+  'labour_hourly_rate', 'labour_total', 'estimate_subtotal', 'allowances',
+  'quote_pending_items', 'pricing_summary', 'assumptions', 'exclusions', 'options',
+  'proposal_total', 'intake_reference',
+];
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(DRAFTS_FILE)) fs.writeFileSync(DRAFTS_FILE, '{}\n');
@@ -301,7 +319,7 @@ function buildMergeTags(body) {
 function buildCreateForm(body) {
   const project = body.project || {};
   const recipient = body.recipient || {};
-  const config = body.betterProposals || {};
+  const config = BP_CONFIG;
   const form = new URLSearchParams();
 
   form.append('Company', String(recipient.company || recipient.fullName || 'Visture POC Test'));
@@ -349,28 +367,48 @@ function validateCreateRequest(body) {
   requiredString(body.proposal && body.proposal.estimateGrouping, 'Estimate organization');
   normalizeMaterialLineItems(body.proposal && body.proposal.materialLineItems);
   normalizeLaborEstimate(body.proposal && body.proposal.laborEstimate);
-  requiredString(body.betterProposals && body.betterProposals.templateId, 'Better Proposals template ID');
   return recipientEmail;
+}
+
+function discoveryRecordId(item) {
+  if (typeof item === 'string' || typeof item === 'number') return String(item);
+  if (!item || typeof item !== 'object') return '';
+  return String(item.id || item.ID || item.Id || item.TemplateID || item.template_id || item.code || item.Code || '');
+}
+
+function discoveryTagName(item) {
+  if (typeof item === 'string') return item.replace(/[{}]/g, '');
+  if (!item || typeof item !== 'object') return '';
+  return String(item.tag || item.Tag || item.slug || item.Slug || item.name || item.Name || '').replace(/[{}]/g, '');
+}
+
+function assessDiscovery(result) {
+  const templateIds = Array.isArray(result.templates) ? result.templates.map(discoveryRecordId) : [];
+  const tags = Array.isArray(result.mergeTags) ? result.mergeTags.map(discoveryTagName) : [];
+  const missingTags = REQUIRED_MERGE_TAGS.filter((tag) => !tags.includes(tag));
+  const templateFound = templateIds.includes(BP_CONFIG.templateId);
+  const coreListsReady = Array.isArray(result.documentTypes) && result.documentTypes.length > 0
+    && Array.isArray(result.currencies) && result.currencies.length > 0;
+  return {
+    ready: templateFound && coreListsReady && missingTags.length === 0,
+    configuredTemplateFound: templateFound,
+    missingTags,
+  };
 }
 
 async function discoverBetterProposals() {
   if (MODE !== 'live') {
-    return {
+    const result = {
       mode: 'mock',
-      templates: [{ id: 'MOCK-TEMPLATE-01', name: 'Visture POC Master Proposal' }],
+      templates: [{ id: BP_CONFIG.templateId, name: 'Visture POC Master Proposal' }],
       documentTypes: [{ id: 'Proposal', name: 'Proposal' }],
       currencies: [{ id: 'cad', name: 'Canadian Dollar', code: 'cad' }],
       brands: [{ id: 'MOCK-BRAND-01', name: 'Visture' }],
-      mergeTags: [
-        'project_name', 'site_address', 'client_objectives', 'client_constraints',
-        'proposal_summary', 'scope_of_work', 'estimate_grouping', 'client_specifications',
-        'material_pricing', 'material_subtotal', 'labour_pricing', 'labour_hours',
-        'labour_hourly_rate', 'labour_total', 'estimate_subtotal', 'allowances',
-        'quote_pending_items', 'pricing_summary', 'assumptions', 'exclusions', 'options', 'proposal_total',
-        'intake_reference',
-      ].map((tag) => ({ tag, name: tag })),
+      mergeTags: REQUIRED_MERGE_TAGS.map((tag) => ({ tag, name: tag })),
       settings: { note: 'Mock mode: add a real API token in .env to query the account.' },
+      configuration: { ...BP_CONFIG },
     };
+    return { ...result, ...assessDiscovery(result) };
   }
 
   const endpoints = {
@@ -389,16 +427,26 @@ async function discoverBetterProposals() {
       return [key, { error: safeMessage(error) }];
     }
   }));
-  return { mode: 'live', ...Object.fromEntries(entries) };
+  const result = { mode: 'live', ...Object.fromEntries(entries), configuration: { ...BP_CONFIG } };
+  return { ...result, ...assessDiscovery(result) };
 }
 
 async function createDraft(body) {
   const recipientEmail = validateCreateRequest(body);
+  if (MODE === 'live') {
+    const discovery = await discoverBetterProposals();
+    if (!discovery.ready) {
+      const reason = !discovery.configuredTemplateFound
+        ? `Configured Better Proposals template ${BP_CONFIG.templateId} was not found.`
+        : `Better Proposals account mapping is incomplete. Missing tags: ${discovery.missingTags.join(', ') || 'none'}.`;
+      throw new Error(reason);
+    }
+  }
   const idempotencySeed = [
     body.intakeId,
     body.revision || '1',
     recipientEmail,
-    body.betterProposals.templateId,
+    BP_CONFIG.templateId,
   ].join('|');
   const idempotencyKey = hashKey(idempotencySeed);
   const drafts = readDrafts();

@@ -7,14 +7,14 @@ This audit maps the current Better Proposals proof of concept to the investigati
 | Brief requirement | Current POC status | Evidence or limitation |
 |---|---|---|
 | Standard site intake | Partial | Captures typed or browser-dictated notes, measurements, photographs, client objectives, and constraints. Per the current UI decision, photographs are the only uploaded files; other source information is entered as text. |
-| Flag missing information | Implemented for required POC fields | Draft validation blocks incomplete project, recipient, intake, proposal, template, discovery, and review-confirmation fields. Production estimating will need more detailed completeness rules by project type. |
+| Flag missing information | Implemented for required POC fields | Draft validation blocks incomplete project, recipient, intake, proposal, backend account discovery, and review-confirmation fields. Production estimating will need more detailed completeness rules by project type. |
 | AI estimate using approved Visture rules | Not implemented | Phase one uses clearly labelled fictional estimate and scope content. Approved labour rates, markups, pricing rules, historical costs, and the Project Estimator GPT configuration are not yet available in this repository. |
 | Detailed estimate by apartment, room, trade, or phase | Partial | The POC captures the selected organization and maps multiline estimate content. It does not yet generate structured variable-length rows or quantities with AI. |
 | Separate material and labour | Partial | Materials use structured line items with quantity, unit, unit price, and server-calculated totals. Labour uses estimated total hours and a pre-filled CAD 75 hourly rate, with server-calculated labour and combined totals. Approved production rates and AI validation are not implemented. |
 | Allowances, options, exclusions, quote-pending items | Partial | Each category is captured separately and mapped to the proposal, but the values remain manually entered test content. |
 | Client-visible specifications | Partial | A dedicated specifications field and merge tag are implemented. AI authoring and project-specific validation are not. |
 | JG commercial review before progress | Partial | Pre-draft confirmations and a page-level review record exist. The page-level record is stored in the current browser and is not an authenticated production approval. |
-| Branded proposal assembly | Implemented for fixed merge-tag content | Uses Better Proposals template, brand, cover, document type, currency, tax, contacts, and custom merge tags. |
+| Branded proposal assembly | Implemented for fixed merge-tag content | Uses server-configured Better Proposals template `744153`, brand, cover, document type, currency, tax, contacts, and custom merge tags. Account mapping is not exposed in the intake UI. |
 | Optional AI concept visuals | Not implemented | Photograph selection is local metadata only. No image generation, upload, or Better Proposals placement workflow exists. |
 | Better Proposals draft only | Implemented | The connector exposes draft creation and status reads, with no send endpoint. |
 | Final JG review and native approval | Partial | The POC links back to the created document. Better Proposals native Manager Approval remains a manual account action because it is not exposed by the published API. |

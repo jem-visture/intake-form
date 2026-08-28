@@ -53,16 +53,6 @@
     "exclusions": "Fictional exclusions.",
     "options": "Fictional options."
   },
-  "betterProposals": {
-    "templateId": "REPLACE_WITH_REAL_TEMPLATE_ID",
-    "coverId": "",
-    "brandId": "",
-    "documentType": "Proposal",
-    "currency": "cad",
-    "taxEnabled": true,
-    "taxLabel": "GST",
-    "taxAmount": "5"
-  },
   "release": {
     "forJGReview": true,
     "reviewOwner": "JG",

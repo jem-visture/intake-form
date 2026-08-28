@@ -8,7 +8,7 @@ Prove that approved sample content can create a Better Proposals draft, that JG 
 
 - [ ] Start the POC server in live mode.
 - [ ] Open the browser interface.
-- [ ] Select `Test connection and discover account`.
+- [ ] Confirm account discovery runs automatically without displaying Better Proposals configuration fields in the intake form.
 - [ ] Confirm that templates are returned.
 - [ ] Confirm that document types are returned.
 - [ ] Confirm that currencies are returned.
@@ -16,7 +16,7 @@ Prove that approved sample content can create a Better Proposals draft, that JG 
 - [ ] Confirm that custom merge tags are returned.
 - [ ] Confirm that no API token is visible in browser tools or output.
 
-Pass condition: the Visture template and required account settings can be selected without manually hard-coding every ID.
+Pass condition: the server verifies configured template `744153` and required account settings, and the sidebar connection status becomes `Ready`.
 
 ## Test 2: Draft creation
 
@@ -24,7 +24,7 @@ Pass condition: the Visture template and required account settings can be select
 - [ ] Confirm the dummy material rows show plausible quantities, unit prices, line totals, and a CAD 152,500 material subtotal.
 - [ ] Confirm 1,700 dummy labour hours at CAD 75/hour produce a CAD 127,500 labour total and CAD 280,000 combined subtotal.
 - [ ] Add, edit, and remove a material row; confirm its line total and subtotal recalculate immediately.
-- [ ] Select the Visture template and settings.
+- [ ] Confirm the backend is using template `744153` and the intended server-side settings.
 - [ ] Confirm the entered test recipient email is correct.
 - [ ] Check all three release confirmations.
 - [ ] Create the draft.

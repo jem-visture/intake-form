@@ -70,11 +70,10 @@ http://localhost:8787
 Then:
 
 1. Select `Fill form with dummy data`.
-2. Select `Test connection and discover account`.
-3. Choose the mock template.
-4. Check the three release confirmations.
-5. Select `Create Better Proposals draft`.
-6. Review the on-page content preview and record a test JG review decision.
+2. Wait for the sidebar connection status to show `Ready`; backend account mapping runs automatically.
+3. Check the three release confirmations.
+4. Select `Create Better Proposals draft`.
+5. Review the on-page content preview and record a test JG review decision.
 
 No email or external write occurs in mock mode.
 
@@ -85,10 +84,10 @@ Requires Node.js 18 or newer.
 1. Copy `.env.example` to `.env`.
 2. Set `BP_MODE=live`.
 3. Add the Better Proposals API token to `BETTER_PROPOSALS_API_TOKEN`.
-4. Start the server with `node server.js`.
-5. Open `http://localhost:8787`.
-6. Enter and confirm the intended test recipient email.
-7. Use `Test connection and discover account` before creating a draft.
+4. Keep `BP_TEMPLATE_ID=744153`, or override it only when intentionally changing the backend template.
+5. Start the server with `node server.js`.
+6. Open `http://localhost:8787`.
+7. Enter and confirm the intended test recipient email. Backend account discovery runs automatically and must pass before draft creation.
 
 Do not paste the API token into ChatGPT, the browser form, source code, screenshots, email, or GoHighLevel fields. Store it only in the server-side `.env` file or a secure secret manager.
 
@@ -102,8 +101,9 @@ The repository includes a Vercel Function adapter in `api/index.mjs` and routing
    - `BP_MODE` = `live`
    - `BETTER_PROPOSALS_API_TOKEN` = the secret token
    - `BP_API_BASE` = `https://api.betterproposals.io`
+   - `BP_TEMPLATE_ID` = `744153`
 4. Apply the token to only the Vercel environments that should be allowed to access the live Better Proposals account.
-5. Deploy, then use account discovery before creating a draft.
+5. Deploy. The page automatically checks the server-side template and account mapping before allowing draft creation.
 
 Never commit `.env`. Vercel Functions have ephemeral local storage, so the local duplicate registry is only a best-effort safeguard per running function instance. For production-grade idempotency, replace it with a durable database before allowing multiple operators or automated draft creation.
 
@@ -111,8 +111,8 @@ Never commit `.env`. Vercel Functions have ephemeral local storage, so the local
 
 1. Load the sample intake and proposal.
 2. Discover the Better Proposals account.
-3. Select the Visture template, brand, document type, CAD, and GST settings.
-4. Confirm that every expected custom merge tag exists.
+3. Confirm the sidebar reports that the backend Better Proposals connection is ready.
+4. Confirm template `744153`, CAD, GST, and every expected custom merge tag are configured server-side.
 5. Create the draft.
 6. Confirm that the returned document appears in Better Proposals as a draft and has not been sent.
 7. Confirm which Better Proposals user owns the API-created draft. This determines how native approval permissions apply.

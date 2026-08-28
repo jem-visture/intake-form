@@ -60,13 +60,15 @@ async function main() {
     const discover = await request('/api/bp/discover');
     assert(discover.response.ok, 'Discovery endpoint failed.');
     assert(Array.isArray(discover.data.templates) && discover.data.templates.length > 0, 'Mock templates were not returned.');
+    assert(discover.data.configuration.templateId === '744153', 'Template 744153 should be configured on the backend.');
+    assert(discover.data.configuredTemplateFound === true, 'Configured backend template should be discoverable.');
+    assert(discover.data.ready === true, 'Backend Better Proposals mapping should be ready in mock mode.');
 
     const sample = JSON.parse(fs.readFileSync(path.join(ROOT, 'sample-create-draft-request.json'), 'utf8'));
     const materialSubtotal = sample.proposal.materialLineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     assert(materialSubtotal === 152500, 'Dummy material line items should total CAD 152,500.');
     assert(sample.proposal.laborEstimate.hours * sample.proposal.laborEstimate.hourlyRate === 127500, 'Dummy labour should total CAD 127,500.');
     assert(materialSubtotal + (sample.proposal.laborEstimate.hours * sample.proposal.laborEstimate.hourlyRate) === 280000, 'Dummy materials and labour should total CAD 280,000.');
-    sample.betterProposals.templateId = 'MOCK-TEMPLATE-01';
     sample.intakeId = `VST-BP-TEST-${Date.now()}`;
 
     const first = await request('/api/bp/create-draft', {
