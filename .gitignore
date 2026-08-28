@@ -4,6 +4,9 @@
 data/drafts.json
 data/*.tmp
 node_modules/
+.venv/
+__pycache__/
+*.pyc
 .vercel/
 *.log
 .DS_Store

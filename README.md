@@ -48,6 +48,8 @@ Even with Manager Approvals, Better Proposals' documented flow requires an autho
 - `.env.example` - environment-variable template. It contains no real secret.
 - `BETTER_PROPOSALS_SETUP_CHECKLIST.md` - exact account items needed.
 - `TEMPLATE_MAPPING.md` - custom merge-tag and template design.
+- `Visture Proposal Template - Merge Tags Updated.docx` - edited placement guide with every current custom and built-in merge tag in context.
+- `VISTURE_TEMPLATE_TAG_PLACEMENT.md` - section-by-section reference for recreating the layout in Better Proposals.
 - `TEST_SCRIPT.md` - acceptance-test steps for JG and the entered test recipient.
 - `INVESTIGATION_BRIEF_ALIGNMENT.md` - requirement-by-requirement POC coverage, gaps, and next implementation gates.
 - `sample-create-draft-request.json` - sample payload shape.
