@@ -300,6 +300,22 @@
     .line-item-row input, .line-item-row select { min-width: 0; padding: 9px 8px; background: #fff; }
     .line-item-total { text-align: right; font-size: 12px; font-weight: 700; white-space: nowrap; }
     .remove-line-item { width: 24px; height: 24px; padding: 0; border-radius: 50%; color: var(--muted); font-size: 14px; line-height: 1; justify-self: center; }
+    .line-item-full-value {
+      position: absolute;
+      z-index: 1000;
+      display: none;
+      max-width: min(440px, calc(100vw - 32px));
+      padding: 8px 10px;
+      background: var(--charcoal);
+      color: #fff;
+      border: 1px solid #fff;
+      box-shadow: 0 5px 16px rgba(21,33,43,.22);
+      font-size: 12px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      pointer-events: none;
+    }
+    .line-item-full-value.show { display: block; }
     .line-items-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--charcoal); }
     .line-items-subtotal { font-size: 16px; font-weight: 700; }
     .estimate-totals { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); background: var(--charcoal); color: #fff; }
@@ -919,6 +935,47 @@
     updateEstimateTotals();
   }
 
+  const lineItemTooltip = document.createElement('div');
+  lineItemTooltip.id = 'lineItemFullValue';
+  lineItemTooltip.className = 'line-item-full-value';
+  lineItemTooltip.setAttribute('role', 'tooltip');
+  document.body.appendChild(lineItemTooltip);
+
+  function showLineItemTooltip(input) {
+    const fullValue = input.value.trim();
+    if (!fullValue) {
+      hideLineItemTooltip();
+      return;
+    }
+    lineItemTooltip.textContent = fullValue;
+    lineItemTooltip.classList.add('show');
+    const inputRect = input.getBoundingClientRect();
+    const tooltipRect = lineItemTooltip.getBoundingClientRect();
+    const left = Math.max(16, Math.min(inputRect.left + window.scrollX, window.scrollX + window.innerWidth - tooltipRect.width - 16));
+    lineItemTooltip.style.left = `${left}px`;
+    lineItemTooltip.style.top = `${inputRect.bottom + window.scrollY + 5}px`;
+  }
+
+  function hideLineItemTooltip() {
+    lineItemTooltip.classList.remove('show');
+  }
+
+  window.addEventListener('scroll', hideLineItemTooltip, true);
+  window.addEventListener('resize', hideLineItemTooltip);
+
+  function wireLineItemTooltip(input) {
+    input.setAttribute('aria-describedby', lineItemTooltip.id);
+    input.addEventListener('mouseenter', () => showLineItemTooltip(input));
+    input.addEventListener('mouseleave', () => {
+      if (document.activeElement !== input) hideLineItemTooltip();
+    });
+    input.addEventListener('focus', () => showLineItemTooltip(input));
+    input.addEventListener('blur', hideLineItemTooltip);
+    input.addEventListener('input', () => {
+      if (document.activeElement === input || input.matches(':hover')) showLineItemTooltip(input);
+    });
+  }
+
   function addMaterialLineItem(item = {}) {
     const row = document.createElement('div');
     row.className = 'line-item-row';
@@ -936,6 +993,8 @@
     row.querySelector('.line-item-quantity').value = item.quantity ?? 1;
     row.querySelector('.line-item-unit').value = item.unit || 'each';
     row.querySelector('.line-item-price').value = item.unitPrice ?? 0;
+    wireLineItemTooltip(row.querySelector('.line-item-area'));
+    wireLineItemTooltip(row.querySelector('.line-item-name'));
     row.querySelectorAll('input, select').forEach((control) => control.addEventListener('input', updateMaterialTotals));
     row.querySelector('.remove-line-item').addEventListener('click', () => {
       row.remove();
