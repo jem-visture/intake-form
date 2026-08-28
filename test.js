@@ -83,7 +83,7 @@ async function main() {
     } catch (error) {
       mergeTagLimitError = error.message;
     }
-    assert(/limits the complete MergeTags parameter to 1,000 characters/.test(mergeTagLimitError), 'The direct API limit should be detected before a live request.');
+    assert(/configured Better Proposals MergeTags limit is 1,000 characters/.test(mergeTagLimitError), 'The configured direct API limit should be detected before a live request.');
     sample.intakeId = `VST-BP-TEST-${Date.now()}`;
 
     const first = await request('/api/bp/create-draft', {

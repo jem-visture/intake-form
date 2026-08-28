@@ -23,6 +23,9 @@ Pass condition: the server verifies configured template `744153` and required ac
 - [ ] Enter the intended recipient email, then select `Fill form with dummy data`. Confirm the email is preserved and all required intake and proposal content is populated.
 - [ ] Confirm the recipient first name and required last name are correct before creating a draft.
 - [ ] Preview the Better Proposals request and confirm every intake and proposal source field is populated; the automated test separately verifies all 23 custom merge-tag values are nonblank.
+- [ ] Refresh the page and confirm text fields, material rows, recipient details, and release confirmations are restored from browser storage.
+- [ ] Confirm photograph files must be reselected after refresh because browsers do not restore file inputs.
+- [ ] Select `Clear All Fields`, cancel the confirmation once, then confirm it and verify the form and saved recovery copy are cleared.
 - [ ] Confirm the dummy material rows show plausible quantities, unit prices, line totals, and a CAD 152,500 material subtotal.
 - [ ] Confirm 1,700 dummy labour hours at CAD 75/hour produce a CAD 127,500 labour total and CAD 280,000 combined subtotal.
 - [ ] Add, edit, and remove a material row; confirm its line total and subtotal recalculate immediately.

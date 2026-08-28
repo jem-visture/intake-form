@@ -265,6 +265,8 @@
     button.primary:hover { background: #c94b25; }
     button.good { background: var(--charcoal); border-color: var(--charcoal); color: #fff; }
     button.good:hover { background: var(--blue); border-color: var(--blue); }
+    button.danger { border-color: #a23c3c; color: #8a2f2f; }
+    button.danger:hover { background: #8a2f2f; border-color: #8a2f2f; color: #fff; }
     button:disabled { opacity: 0.45; cursor: not-allowed; }
     button:disabled:hover { background: inherit; color: inherit; }
 
@@ -671,11 +673,13 @@
         <div class="status-row"><span>Recipient</span><span class="status warn" id="recipientStatus">Not set</span></div>
         <div class="status-row"><span>Connection</span><span class="status warn" id="connectionStatus">Not tested</span></div>
         <div class="status-row"><span>Draft creation</span><span class="status warn" id="draftStatus">Not run</span></div>
+        <div class="status-row"><span>Form recovery</span><span class="status warn" id="formSaveStatus">Not saved</span></div>
         <div class="status-row"><span>JG page review</span><span class="status warn" id="reviewStatus">Not reviewed</span></div>
         <div class="status-row"><span>Auto-send</span><span class="status good">Disabled</span></div>
         <div class="actions">
           <button id="showIntake" type="button">Preview intake JSON</button>
           <button id="showPayload" type="button">Preview Better Proposals request</button>
+          <button id="clearFormButton" class="danger" type="button">Clear all fields</button>
         </div>
       </div>
     </div>
@@ -684,7 +688,7 @@
       <div class="rail-head"><strong>What is needed from Better Proposals</strong></div>
       <div class="rail-body">
         <div class="checklist">
-          <label class="checkline"><input type="checkbox">Premium or Enterprise plan</label>
+          <label class="checkline"><input type="checkbox">Enterprise plan with the expected 30,000-character API limit enabled</label>
           <label class="checkline"><input type="checkbox">API token stored in <span class="small-code">.env</span></label>
           <label class="checkline"><input type="checkbox">Visture master template</label>
           <label class="checkline"><input type="checkbox">Custom merge tags</label>
@@ -717,6 +721,18 @@
   let health = null;
   let latestDraft = null;
   let discoveryPassed = false;
+  let autosaveTimer = null;
+  let restoringAutosave = false;
+  const FORM_AUTOSAVE_KEY = 'visture-intake-form:draft:v1';
+  const AUTOSAVE_FIELD_IDS = [
+    'intakeId', 'revision', 'projectName', 'siteAddress', 'firstName', 'lastName',
+    'clientCompany', 'recipientEmail', 'siteNotes', 'measurements', 'photoNotes',
+    'clientObjectives', 'clientConstraints', 'proposalSummary', 'scopeOfWork',
+    'estimateGrouping', 'clientSpecifications', 'laborHours', 'laborHourlyRate',
+    'allowances', 'quotePendingItems', 'pricingSummary', 'proposalTotal',
+    'assumptions', 'exclusions', 'options', 'contentReady', 'jgReviewer',
+    'testRecipientConfirmed',
+  ];
 
   function fileNames(input) {
     return Array.from(input.files || []).map((file) => ({ name: file.name, size: file.size, type: file.type || '' }));
@@ -799,6 +815,7 @@
             else interimTranscript += `${transcript} `;
           }
           textarea.value = [startingText, finalTranscript.trim(), interimTranscript.trim()].filter(Boolean).join(' ');
+          scheduleAutosave();
         });
 
         recognition.addEventListener('error', (event) => {
@@ -924,9 +941,11 @@
       row.remove();
       if (!$('materialLineItems').children.length) addMaterialLineItem();
       updateMaterialTotals();
+      scheduleAutosave();
     });
     $('materialLineItems').appendChild(row);
     updateMaterialTotals();
+    scheduleAutosave();
   }
 
   function setMaterialLineItems(items) {
@@ -936,10 +955,103 @@
     updateMaterialTotals();
   }
 
+  function setFormSaveStatus(className, text) {
+    const element = $('formSaveStatus');
+    if (element) statusClass(element, className, text);
+  }
+
+  function saveFormDraft() {
+    if (restoringAutosave) return;
+    const fields = {};
+    AUTOSAVE_FIELD_IDS.forEach((id) => {
+      const element = $(id);
+      if (!element) return;
+      fields[id] = element.type === 'checkbox' ? element.checked : element.value;
+    });
+    try {
+      localStorage.setItem(FORM_AUTOSAVE_KEY, JSON.stringify({
+        version: 1,
+        savedAt: new Date().toISOString(),
+        fields,
+        materialLineItems: readMaterialLineItems(),
+      }));
+      setFormSaveStatus('good', 'Saved locally');
+    } catch (_error) {
+      setFormSaveStatus('bad', 'Storage unavailable');
+    }
+  }
+
+  function scheduleAutosave() {
+    if (restoringAutosave) return;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(saveFormDraft, 250);
+  }
+
+  function restoreFormDraft() {
+    let saved;
+    try {
+      saved = JSON.parse(localStorage.getItem(FORM_AUTOSAVE_KEY) || 'null');
+    } catch (_error) {
+      setFormSaveStatus('bad', 'Restore unavailable');
+      return false;
+    }
+    if (!saved || !saved.fields) return false;
+    restoringAutosave = true;
+    AUTOSAVE_FIELD_IDS.forEach((id) => {
+      const element = $(id);
+      if (!element || !(id in saved.fields)) return;
+      if (element.type === 'checkbox') element.checked = saved.fields[id] === true;
+      else element.value = saved.fields[id];
+    });
+    if (Array.isArray(saved.materialLineItems) && saved.materialLineItems.length) setMaterialLineItems(saved.materialLineItems);
+    restoringAutosave = false;
+    updateEstimateTotals();
+    setFormSaveStatus('good', 'Restored locally');
+    return true;
+  }
+
+  function clearFormDraft() {
+    if (!window.confirm('Clear every intake and proposal field saved in this browser? This cannot be undone.')) return;
+    clearTimeout(autosaveTimer);
+    restoringAutosave = true;
+    AUTOSAVE_FIELD_IDS.forEach((id) => {
+      const element = $(id);
+      if (!element) return;
+      if (element.type === 'checkbox') element.checked = false;
+      else element.value = '';
+    });
+    setMaterialLineItems([]);
+    $('photoFiles').value = '';
+    $('photoFileList').textContent = 'No photographs selected.';
+    $('jgReviewNotes').value = '';
+    $('proposalId').value = '';
+    $('proposalUrl').value = '';
+    restoringAutosave = false;
+    try { localStorage.removeItem(FORM_AUTOSAVE_KEY); } catch (_error) { /* Browser storage may be disabled. */ }
+    latestDraft = null;
+    $('proposalPreview').textContent = '';
+    $('proposalPreview').className = 'proposal-preview';
+    $('createResult').textContent = '';
+    $('createResult').className = 'result';
+    $('statusResult').textContent = '';
+    $('statusResult').className = 'result';
+    $('markApprovedButton').disabled = true;
+    $('markChangesButton').disabled = true;
+    updateMaterialTotals();
+    updateRecipientStatus();
+    statusClass($('draftStatus'), 'warn', 'Not run');
+    statusClass($('reviewStatus'), 'warn', 'Not reviewed');
+    setFormSaveStatus('warn', 'Cleared');
+  }
+
   $('addMaterialItem').addEventListener('click', () => addMaterialLineItem());
   $('laborHours').addEventListener('input', updateEstimateTotals);
   $('laborHourlyRate').addEventListener('input', updateEstimateTotals);
   addMaterialLineItem();
+  restoreFormDraft();
+  document.querySelector('main').addEventListener('input', scheduleAutosave);
+  document.querySelector('main').addEventListener('change', scheduleAutosave);
+  $('clearFormButton').addEventListener('click', clearFormDraft);
 
   function updateRecipientStatus() {
     const email = value('recipientEmail').toLowerCase();
@@ -1076,6 +1188,7 @@
     $('exclusions').value = 'Hazardous-material abatement, structural engineering, appliance supply, strata fees, and work outside the stated rooms unless added by approved change.';
     $('options').value = 'Optional millwork upgrade: CAD 18,000. Optional smart lighting package: CAD 6,500. Values are fictional.';
     updateRecipientStatus();
+    saveFormDraft();
   }
 
   $('loadDemo').addEventListener('click', loadDemo);
@@ -1321,7 +1434,8 @@
       $('showDraftRaw').addEventListener('click', () => showDialog('Draft creation response', data));
     } catch (error) {
       statusClass($('draftStatus'), 'bad', 'Failed');
-      resultBox.innerHTML = `<div class="danger-banner">${error.message}</div>`;
+      saveFormDraft();
+      resultBox.innerHTML = `<div class="danger-banner">${error.message}</div><p>Your form has been saved in this browser. Correct the issue and select <strong>Create Better Proposals draft</strong> again. Photograph files must be reselected after a page refresh.</p>`;
     } finally {
       $('createDraftButton').disabled = false;
     }

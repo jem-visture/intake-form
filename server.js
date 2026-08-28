@@ -35,6 +35,7 @@ const PORT = Number(process.env.PORT || 8787);
 const API_BASE = String(process.env.BP_API_BASE || 'https://api.betterproposals.io').replace(/\/+$/, '');
 const TOKEN = String(process.env.BETTER_PROPOSALS_API_TOKEN || '').trim();
 const MODE = String(process.env.BP_MODE || (TOKEN ? 'live' : 'mock')).toLowerCase();
+const MERGE_TAG_LIMIT_INPUT = Number(process.env.BP_MERGE_TAG_LIMIT || '1000');
 const BP_CONFIG = Object.freeze({
   templateId: String(process.env.BP_TEMPLATE_ID || '744153').trim(),
   coverId: String(process.env.BP_COVER_ID || '').trim(),
@@ -44,6 +45,7 @@ const BP_CONFIG = Object.freeze({
   taxEnabled: String(process.env.BP_TAX_ENABLED || 'true').toLowerCase() === 'true',
   taxLabel: String(process.env.BP_TAX_LABEL || 'GST').trim(),
   taxAmount: String(process.env.BP_TAX_AMOUNT || '5').trim(),
+  mergeTagLimit: Number.isFinite(MERGE_TAG_LIMIT_INPUT) && MERGE_TAG_LIMIT_INPUT > 0 ? Math.floor(MERGE_TAG_LIMIT_INPUT) : 1000,
 });
 const REQUIRED_MERGE_TAGS = [
   'project_name', 'site_address', 'client_objectives', 'client_constraints',
@@ -324,8 +326,8 @@ function buildMergeTags(body) {
     .map(([tag, value]) => {
       const entry = { tag, value: String(value) };
       const entryLength = JSON.stringify(entry).length;
-      if (entryLength > 1000) {
-        throw new Error(`Better Proposals merge tag "${tag}" is too long (${entryLength}/1000 characters). Shorten this content before creating a draft.`);
+      if (entryLength > BP_CONFIG.mergeTagLimit) {
+        throw new Error(`Better Proposals merge tag "${tag}" is too long (${entryLength.toLocaleString('en-CA')}/${BP_CONFIG.mergeTagLimit.toLocaleString('en-CA')} characters). Shorten this content before creating a draft.`);
       }
       return entry;
     });
@@ -333,8 +335,8 @@ function buildMergeTags(body) {
 
 function serializeMergeTags(body) {
   const serialized = JSON.stringify(buildMergeTags(body));
-  if (serialized.length > 1000) {
-    throw new Error(`Better Proposals limits the complete MergeTags parameter to 1,000 characters. This draft requires ${serialized.length}. The direct API cannot create a complete proposal without reducing or changing the merge-tag mapping.`);
+  if (serialized.length > BP_CONFIG.mergeTagLimit) {
+    throw new Error(`The configured Better Proposals MergeTags limit is ${BP_CONFIG.mergeTagLimit.toLocaleString('en-CA')} characters. This draft requires ${serialized.length.toLocaleString('en-CA')}. Upgrade or correct BP_MERGE_TAG_LIMIT before retrying.`);
   }
   return serialized;
 }

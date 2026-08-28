@@ -38,8 +38,9 @@ Account discovery requests up to 100 custom merge tags because the Better Propos
 
 ## Better Proposals plan requirement
 
-- Premium: API/Zapier and custom merge tags. This is enough to create the draft, but JG review is a manual operating step.
-- Enterprise: everything above plus native Manager Approvals and advanced permissions. Use this when a formal approval block inside Better Proposals is required.
+- Enterprise is required for this POC. Premium provides API/Zapier access and custom merge tags, but the live account enforced a 1,000-character combined `MergeTags` limit that is too small for the complete Visture payload.
+- Configure `BP_MERGE_TAG_LIMIT=30000` only after Better Proposals Enterprise is enabled and the expected 30,000-character allowance is confirmed on the account.
+- Enterprise also provides native Manager Approvals and advanced permissions, matching the required JG approval gate.
 
 Even with Manager Approvals, Better Proposals' documented flow requires an authorized user to click `Send Document` after approval. Approval does not itself send the proposal.
 
@@ -108,6 +109,7 @@ The repository includes a Vercel Function adapter in `api/index.mjs` and routing
    - `BP_API_BASE` = `https://api.betterproposals.io`
    - `BP_TEMPLATE_ID` = `744153`
    - `BP_DOCUMENT_TYPE` = `1`
+   - `BP_MERGE_TAG_LIMIT` = `30000` after the Enterprise allowance is confirmed
 4. Apply the token to only the Vercel environments that should be allowed to access the live Better Proposals account.
 5. Deploy. The page automatically checks the server-side template and account mapping before allowing draft creation.
 
@@ -140,6 +142,7 @@ Never commit `.env`. Vercel Functions have ephemeral local storage, so the local
 - Page-level JG review records are clearly separated from Better Proposals native Manager Approval and never send a document.
 - Duplicate create requests are suppressed using an idempotency key.
 - Test records are stored locally in `data/drafts.json`.
+- Intake and proposal fields are automatically saved in browser storage and restored after refresh, connection loss, or a failed API request. They remain until the operator confirms **Clear All Fields**. Browsers do not permit file-input restoration, so photographs must be selected again after refreshing the page.
 
 ## HTML pricing-table test result
 
