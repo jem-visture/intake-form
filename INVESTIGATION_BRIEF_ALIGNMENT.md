@@ -44,6 +44,7 @@ Do not describe the current sample proposal content as an AI-generated estimate.
 
 - The approved Visture estimating instructions and representative examples from the Project Estimator GPT.
 - Labour rates, material pricing sources, markup and margin rules, tax treatment, allowances, contingency, and rounding rules.
+- Better Proposals' direct proposal-create endpoint rejects the full 23-tag POC payload because the complete serialized `MergeTags` parameter exceeds 1,000 characters. Indexed form and structured JSON variants were also rejected. Zapier/Make or Better Proposals support must confirm a supported higher-capacity mapping path before production rollout.
 - A structured estimate schema supporting apartment, room, trade, and phase groupings.
 - Explicit fields for material, labour, allowances, options, exclusions, quote-pending items, specifications, confidence, and source evidence.
 - Evaluation against at least two completed estimates before connecting estimate generation to live draft creation.

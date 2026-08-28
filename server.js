@@ -331,6 +331,14 @@ function buildMergeTags(body) {
     });
 }
 
+function serializeMergeTags(body) {
+  const serialized = JSON.stringify(buildMergeTags(body));
+  if (serialized.length > 1000) {
+    throw new Error(`Better Proposals limits the complete MergeTags parameter to 1,000 characters. This draft requires ${serialized.length}. The direct API cannot create a complete proposal without reducing or changing the merge-tag mapping.`);
+  }
+  return serialized;
+}
+
 function buildCreateForm(body) {
   const project = body.project || {};
   const recipient = body.recipient || {};
@@ -353,7 +361,7 @@ function buildCreateForm(body) {
   addIfPresent(form, 'Contacts[0][Surname]', recipient.lastName);
   form.append('Contacts[0][Email]', cleanEmail(recipient.email));
   form.append('Contacts[0][Signature]', recipient.signatureRequired === false ? '0' : '1');
-  form.append('MergeTags', JSON.stringify(buildMergeTags(body)));
+  form.append('MergeTags', serializeMergeTags(body));
 
   // The public API does not document a title field. Put the test title into a merge tag.
   if (project.name) {
@@ -628,7 +636,7 @@ async function requestHandler(req, res) {
 
     json(res, 404, { status: 'error', message: 'Not found.' });
   } catch (error) {
-    const statusCode = /required|valid|unsupported|missing|must/i.test(safeMessage(error)) ? 400 : 502;
+    const statusCode = /required|valid|unsupported|missing|must|too long|exceed|limit/i.test(safeMessage(error)) ? 400 : 502;
     json(res, statusCode, {
       status: 'error',
       message: safeMessage(error),
@@ -646,4 +654,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { requestHandler, buildMergeTags, REQUIRED_MERGE_TAGS };
+module.exports = { requestHandler, buildMergeTags, serializeMergeTags, REQUIRED_MERGE_TAGS };

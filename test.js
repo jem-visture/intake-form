@@ -3,7 +3,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { buildMergeTags, REQUIRED_MERGE_TAGS } = require('./server');
+const { buildMergeTags, serializeMergeTags, REQUIRED_MERGE_TAGS } = require('./server');
 
 const ROOT = __dirname;
 const PORT = 8791;
@@ -77,6 +77,13 @@ async function main() {
     const materialPricing = mergeTags.find((entry) => entry.tag === 'material_pricing');
     assert(materialPricing.value.includes('cellpadding="10"'), 'Dummy material pricing should use the spaced HTML table.');
     assert(materialPricing.value.includes('rules="rows"'), 'Dummy material pricing should include row separators.');
+    let mergeTagLimitError = '';
+    try {
+      serializeMergeTags(sample);
+    } catch (error) {
+      mergeTagLimitError = error.message;
+    }
+    assert(/limits the complete MergeTags parameter to 1,000 characters/.test(mergeTagLimitError), 'The direct API limit should be detected before a live request.');
     sample.intakeId = `VST-BP-TEST-${Date.now()}`;
 
     const first = await request('/api/bp/create-draft', {

@@ -147,9 +147,10 @@ A live unsent draft confirmed that Better Proposals renders HTML supplied as the
 
 This is useful for presentation-only pricing, but it is not yet a production-safe variable-length pricing-table solution:
 
-- The merge-tag entry, including its JSON wrapper, must remain under the API's 1,000-character validation limit. The styled seven-row dummy table uses 985 characters in the API array payload.
+- Better Proposals applies its 1,000-character validation limit to the complete serialized `MergeTags` parameter. The full 23-tag dummy payload is 2,584 characters, so it cannot be submitted through the published direct-create format.
 - The HTML table does not populate Better Proposals' native pricing-table totals, options, choices, or dashboard value.
-- Longer estimates need an agreed chunking/template strategy or a supported native pricing-table integration before rollout.
+- Indexed form fields and a structured JSON request were both rejected by the live API, so they do not provide a workaround.
+- A production workflow needs a smaller mapping, confirmed Zapier/Make behavior that bypasses this direct-API limitation, a Better Proposals-supported content endpoint, or a manual editor step.
 
 The guarded reproduction utility is `scripts/create_html_table_test.js`. It refuses to create a record unless `--confirm-live-draft` is supplied. Every live run must still be shown and explicitly authorized before execution.
 
