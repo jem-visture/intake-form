@@ -516,7 +516,7 @@
           <div class="field"><label>Project name <span class="required">*</span></label><input id="projectName" placeholder="POC Test Renovation"></div>
           <div class="field"><label>Site address</label><input id="siteAddress" placeholder="Test address only"></div>
           <div class="field"><label>Client first name <span class="required">*</span></label><input id="firstName" placeholder="Recipient first name"></div>
-          <div class="field"><label>Client last name</label><input id="lastName" placeholder="Optional for test"></div>
+          <div class="field"><label>Client last name <span class="required">*</span></label><input id="lastName" placeholder="Recipient last name"></div>
           <div class="field"><label>Client company</label><input id="clientCompany" value="Visture"></div>
           <div class="field"><label>Test recipient email <span class="required">*</span></label><input id="recipientEmail" type="email" placeholder="recipient@example.com"><span class="hint">This address is attached to the draft and will receive the document only if an authorized human later sends it from Better Proposals.</span></div>
         </div>
@@ -1006,6 +1006,7 @@
     if (!payload.intakeId) missing.push('Intake ID');
     if (!payload.project.name) missing.push('Project name');
     if (!payload.recipient.firstName) missing.push('Recipient first name');
+    if (!payload.recipient.lastName) missing.push('Recipient last name');
     if (!payload.recipient.email) missing.push('Recipient email');
     if (!payload.intake.siteNotes) missing.push('Site notes');
     if (!payload.intake.measurements) missing.push('Measurements');
@@ -1028,6 +1029,7 @@
   }
 
   function loadDemo() {
+    const existingRecipientEmail = value('recipientEmail');
     $('intakeId').value = 'VST-BP-POC-DUMMY-001';
     $('revision').value = '1';
     $('projectName').value = 'TEST ONLY - Harbour View Condo Renovation';
@@ -1035,7 +1037,7 @@
     $('firstName').value = 'Test';
     $('lastName').value = 'Recipient';
     $('clientCompany').value = 'Visture Demo';
-    $('recipientEmail').value = 'test-recipient@example.com';
+    $('recipientEmail').value = existingRecipientEmail;
     $('siteNotes').value = 'Test site visit notes: renovate the kitchen and primary bathroom, replace flooring through the main living areas, protect common corridors, and coordinate all noisy work with building rules. Existing finishes are dated but no visible structural damage was observed during the fictional walkthrough.';
     $('siteNotes').value += ' Dictated note: the client wants a brighter kitchen with more storage, a safer low-threshold shower, durable flooring, and a clear breakdown of allowances and exclusions. Confirm electrical capacity and plumbing routing before final issue.';
     $('measurements').value = 'Kitchen: 4.8 m x 3.6 m. Primary bathroom: 2.7 m x 2.4 m. Flooring replacement area: approximately 118 sq m. Ceiling height: 2.44 m. All quantities are fictional and for connection testing only.';
@@ -1053,23 +1055,18 @@
     $('estimateGrouping').value = 'room';
     $('clientSpecifications').value = 'Kitchen: custom full-height cabinetry, quartz surfaces, LED task lighting, and durable wide-plank flooring. Primary bathroom: low-threshold shower, porcelain tile, waterproofing system, upgraded ventilation, and coordinated matte-black fixtures. All specifications are fictional and subject to selections.';
     setMaterialLineItems([
-      { area: 'Kitchen', name: 'Custom kitchen cabinetry', quantity: 1, unit: 'lump sum', unitPrice: 58000 },
+      { area: 'Kitchen', name: 'Kitchen cabinetry', quantity: 1, unit: 'lump sum', unitPrice: 58000 },
       { area: 'Kitchen', name: 'Quartz countertops', quantity: 52, unit: 'sq ft', unitPrice: 165 },
-      { area: 'Main living areas', name: 'Engineered hardwood flooring', quantity: 1270, unit: 'sq ft', unitPrice: 14.50 },
-      { area: 'Primary bathroom', name: 'Porcelain wall and floor tile', quantity: 420, unit: 'sq ft', unitPrice: 12 },
-      { area: 'Primary bathroom', name: 'Plumbing fixtures', quantity: 1, unit: 'allowance', unitPrice: 9000 },
-      { area: 'Primary bathroom', name: 'Custom shower glass', quantity: 1, unit: 'each', unitPrice: 4200 },
-      { area: 'Throughout', name: 'Decorative lighting fixtures', quantity: 1, unit: 'allowance', unitPrice: 6000 },
-      { area: 'Throughout', name: 'Doors, trim, paint, and finishing materials', quantity: 1, unit: 'lump sum', unitPrice: 9350 },
-      { area: 'Kitchen and bathroom', name: 'Electrical and plumbing rough-in materials', quantity: 1, unit: 'lump sum', unitPrice: 8900 },
-      { area: 'Primary bathroom', name: 'Waterproofing and setting materials', quantity: 1, unit: 'lump sum', unitPrice: 4800 },
-      { area: 'Site logistics', name: 'Protection, disposal, and consumables', quantity: 1, unit: 'lump sum', unitPrice: 7400 },
-      { area: 'Selections', name: 'Material escalation and selection allowance', quantity: 1, unit: 'allowance', unitPrice: 12815 },
+      { area: 'Main living areas', name: 'Hardwood flooring', quantity: 1270, unit: 'sq ft', unitPrice: 14.50 },
+      { area: 'Primary bathroom', name: 'Bathroom tile, fixtures and glass', quantity: 1, unit: 'allowance', unitPrice: 23040 },
+      { area: 'Throughout', name: 'Lighting and finishing materials', quantity: 1, unit: 'allowance', unitPrice: 15350 },
+      { area: 'Site logistics', name: 'Rough-in and site materials', quantity: 1, unit: 'lump sum', unitPrice: 16300 },
+      { area: 'Selections', name: 'Selection allowance', quantity: 1, unit: 'allowance', unitPrice: 12815 },
     ]);
     $('laborHours').value = '1700';
     $('laborHourlyRate').value = '75';
     updateEstimateTotals();
-    $('allowances').value = 'Included test allowances: decorative lighting CAD 6,000; plumbing fixtures CAD 9,000; tile CAD 12,000; hardware CAD 3,000.';
+    $('allowances').value = 'Test allowances are included within the bathroom, decorative-lighting, finishing-material, and selection line items. Final allocations remain subject to JG review.';
     $('quotePendingItems').value = 'Pending confirmation: electrical panel capacity, slab scanning, custom shower glass, permit fees, and strata-required protection or deposits.';
     $('pricingSummary').value = 'Dummy test estimate: 1,700 labour hours at the pre-filled CAD 75 hourly rate. Final pricing remains subject to JG review, trade quotations, selections, exclusions, and GST.';
     $('proposalTotal').value = 'CAD 280,000 before GST - TEST ONLY';

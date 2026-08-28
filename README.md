@@ -147,7 +147,7 @@ A live unsent draft confirmed that Better Proposals renders HTML supplied as the
 
 This is useful for presentation-only pricing, but it is not yet a production-safe variable-length pricing-table solution:
 
-- The merge-tag entry, including its JSON wrapper, must remain under the API's 1,000-character validation limit. The compact seven-row test used 987 characters.
+- The merge-tag entry, including its JSON wrapper, must remain under the API's 1,000-character validation limit. The styled seven-row dummy table uses 985 characters in the API array payload.
 - The HTML table does not populate Better Proposals' native pricing-table totals, options, choices, or dashboard value.
 - Longer estimates need an agreed chunking/template strategy or a supported native pricing-table integration before rollout.
 

@@ -3,6 +3,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { buildMergeTags, REQUIRED_MERGE_TAGS } = require('./server');
 
 const ROOT = __dirname;
 const PORT = 8791;
@@ -69,6 +70,13 @@ async function main() {
     assert(materialSubtotal === 152500, 'Dummy material line items should total CAD 152,500.');
     assert(sample.proposal.laborEstimate.hours * sample.proposal.laborEstimate.hourlyRate === 127500, 'Dummy labour should total CAD 127,500.');
     assert(materialSubtotal + (sample.proposal.laborEstimate.hours * sample.proposal.laborEstimate.hourlyRate) === 280000, 'Dummy materials and labour should total CAD 280,000.');
+    const mergeTags = buildMergeTags(sample);
+    assert(mergeTags.length === REQUIRED_MERGE_TAGS.length, 'Dummy data should populate every required merge tag.');
+    assert(REQUIRED_MERGE_TAGS.every((requiredTag) => mergeTags.some((entry) => entry.tag === requiredTag && entry.value.trim())), 'A required dummy merge tag is blank.');
+    assert(mergeTags.every((entry) => JSON.stringify(entry).length <= 1000), 'A dummy merge-tag entry exceeds Better Proposals\' 1,000-character limit.');
+    const materialPricing = mergeTags.find((entry) => entry.tag === 'material_pricing');
+    assert(materialPricing.value.includes('cellpadding="10"'), 'Dummy material pricing should use the spaced HTML table.');
+    assert(materialPricing.value.includes('rules="rows"'), 'Dummy material pricing should include row separators.');
     sample.intakeId = `VST-BP-TEST-${Date.now()}`;
 
     const first = await request('/api/bp/create-draft', {
@@ -109,6 +117,16 @@ async function main() {
       body: JSON.stringify(invalidLabor),
     });
     assert(rejectedLabor.response.status === 400, 'Zero estimated labour hours should block draft creation.');
+
+    const missingSurname = JSON.parse(JSON.stringify(sample));
+    missingSurname.intakeId = `VST-BP-TEST-SURNAME-${Date.now()}`;
+    missingSurname.recipient.lastName = '';
+    const rejectedSurname = await request('/api/bp/create-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(missingSurname),
+    });
+    assert(rejectedSurname.response.status === 400, 'A missing recipient surname should block draft creation before the Better Proposals API call.');
 
     const second = await request('/api/bp/create-draft', {
       method: 'POST',

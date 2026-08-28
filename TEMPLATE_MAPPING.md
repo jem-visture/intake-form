@@ -27,11 +27,7 @@
 | Estimate heading | `{{estimate_grouping}}` | Room, trade, phase, or apartment grouping |
 | Specifications section | `{{client_specifications}}` | Client-visible finishes and performance details |
 | Detailed pricing | `{{material_pricing}}` | Approved material quantities and pricing |
-| Detailed pricing total | `{{material_subtotal}}` | Server-calculated material subtotal |
 | Detailed pricing | `{{labour_pricing}}` | Approved labour hours, rates, and pricing |
-| Labour detail | `{{labour_hours}}` | Estimated total labour hours |
-| Labour detail | `{{labour_hourly_rate}}` | Approved hourly labour rate |
-| Labour total | `{{labour_total}}` | Server-calculated labour total |
 | Estimate total | `{{estimate_subtotal}}` | Server-calculated materials-plus-labour subtotal |
 | Commercial section | `{{allowances}}` | Approved selection allowances |
 | Commercial section | `{{quote_pending_items}}` | Trade or supplier quotes still required |
@@ -50,7 +46,7 @@ Recipient name and email should be sent through the Better Proposals `Contacts` 
 
 The intake form stores each material as a structured row containing area, item name, quantity, unit, unit price, and calculated total. Labour is estimated as total hours multiplied by an hourly rate pre-filled at CAD 75. The server validates and recalculates every material row, the labour total, and the combined estimate rather than trusting browser totals.
 
-Use `{{material_pricing}}` for the generated multiline itemization and `{{material_subtotal}}` for its calculated total. Use `{{labour_pricing}}`, `{{labour_hours}}`, `{{labour_hourly_rate}}`, `{{labour_total}}`, and `{{estimate_subtotal}}` for calculated labour and combined totals. `{{pricing_summary}}` includes those calculated values plus any additional pricing notes. This proves that the approved estimate categories can reach the proposal without depending on undocumented dynamic pricing-table behavior.
+Use `{{material_pricing}}` for the generated HTML itemization; its final row already contains the material subtotal. Use `{{labour_pricing}}` once for the complete hours × rate = labour-total breakdown, followed by `{{estimate_subtotal}}` for the combined materials-plus-labour subtotal. Do not add separate visible rows for `{{material_subtotal}}`, `{{labour_hours}}`, `{{labour_hourly_rate}}`, or `{{labour_total}}`, because that repeats information. `{{pricing_summary}}` includes the calculated values plus any additional pricing notes.
 
 After that works, test whether Better Proposals can reliably support:
 
@@ -71,7 +67,7 @@ Use this controlled test before relying on native table automation:
 1. Add a small native pricing table to a disposable copy of the Visture template.
 2. Test whether merge tags are accepted in the supported description, quantity, and price cells.
 3. Create one draft with known fictional values and compare every displayed line, tax calculation, option, and total with the source payload.
-4. Test a second estimate with a different number of rows. If the template cannot grow or shrink through a documented mechanism, keep the detailed estimate in multiline content and use the native table only for fixed headline totals or manual JG editing.
+4. Test a second estimate with a different number of rows. If the template cannot grow or shrink through a documented mechanism, keep the detailed estimate in the presentation-only HTML merge-tag table and use the native table only for fixed headline totals or manual JG editing.
 5. Do not describe dynamic pricing-table mapping as supported until both tests pass without manual correction.
 
 ## Images

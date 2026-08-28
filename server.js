@@ -226,11 +226,19 @@ function cad(value) {
   return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(value);
 }
 
-function materialPricingText(items) {
-  const lines = items.map((item) => `${item.area || 'General'} — ${item.name}: ${item.quantity} ${item.unit} × ${cad(item.unitPrice)} = ${cad(item.total)}`);
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function materialPricingHtml(items) {
+  const rows = items.map((item) => `<tr><td>${escapeHtml(item.name)}</td><td>${escapeHtml(`${item.quantity} ${item.unit}`)}</td><td>${escapeHtml(cad(item.unitPrice))}</td><td>${escapeHtml(cad(item.total))}</td></tr>`).join('');
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-  lines.push(`MATERIALS SUBTOTAL: ${cad(subtotal)}`);
-  return lines.join('\n');
+  return `<table width="100%" cellpadding="10" cellspacing="0" rules="rows"><tr bgcolor="#e6e3de"><th align="left">Item</th><th>Quantity</th><th>Unit price</th><th>Total</th></tr>${rows}<tr><th colspan="3" align="right">Subtotal</th><th>${escapeHtml(cad(subtotal))}</th></tr></table>`;
 }
 
 function normalizeLaborEstimate(value) {
@@ -295,7 +303,7 @@ function buildMergeTags(body) {
     scope_of_work: proposal.scope,
     estimate_grouping: proposal.estimateGrouping,
     client_specifications: proposal.specifications,
-    material_pricing: materialPricingText(materialLineItems),
+    material_pricing: materialPricingHtml(materialLineItems),
     material_subtotal: cad(materialSubtotal),
     labour_pricing: laborPricingText(labor),
     labour_hours: labor.hours,
@@ -313,7 +321,14 @@ function buildMergeTags(body) {
   };
   return Object.entries(mapping)
     .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')
-    .map(([tag, value]) => ({ tag, value: String(value) }));
+    .map(([tag, value]) => {
+      const entry = { tag, value: String(value) };
+      const entryLength = JSON.stringify(entry).length;
+      if (entryLength > 1000) {
+        throw new Error(`Better Proposals merge tag "${tag}" is too long (${entryLength}/1000 characters). Shorten this content before creating a draft.`);
+      }
+      return entry;
+    });
 }
 
 function buildCreateForm(body) {
@@ -354,6 +369,7 @@ function buildCreateForm(body) {
 
 function validateCreateRequest(body) {
   if (!body || typeof body !== 'object') throw new Error('Request body is required.');
+  requiredString(body.recipient && body.recipient.lastName, 'Recipient last name');
   const recipientEmail = cleanEmail(body.recipient && body.recipient.email);
   if (!body.release || body.release.forJGReview !== true) {
     throw new Error('The release-for-JG-review confirmation is required.');
@@ -630,4 +646,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { requestHandler };
+module.exports = { requestHandler, buildMergeTags, REQUIRED_MERGE_TAGS };

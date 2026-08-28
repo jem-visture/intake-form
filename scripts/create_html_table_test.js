@@ -34,22 +34,22 @@ function cad(value) {
 
 function materialTableHtml(items) {
   const rows = items.map((item) =>
-    `<tr><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.quantity)}</td><td>${escapeHtml(item.unit)}</td><td>${escapeHtml(cad(item.unitPrice))}</td><td>${escapeHtml(cad(item.quantity * item.unitPrice))}</td></tr>`
+    `<tr><td>${escapeHtml(item.name)}</td><td>${escapeHtml(`${item.quantity} ${item.unit}`)}</td><td>${escapeHtml(cad(item.unitPrice))}</td><td>${escapeHtml(cad(item.quantity * item.unitPrice))}</td></tr>`
   ).join('');
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  return `<table><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Price</th><th>Total</th></tr>${rows}<tr><th colspan="4">Subtotal</th><th>${escapeHtml(cad(subtotal))}</th></tr></table>`;
+  return `<table width="100%" cellpadding="10" cellspacing="0" rules="rows"><tr bgcolor="#e6e3de"><th align="left">Item</th><th>Quantity</th><th>Unit price</th><th>Total</th></tr>${rows}<tr><th colspan="3" align="right">Subtotal</th><th>${escapeHtml(cad(subtotal))}</th></tr></table>`;
 }
 
 async function main() {
   loadDotEnv(path.join(ROOT, '.env'));
   const items = [
-    { name: 'Custom kitchen cabinetry', quantity: 1, unit: 'lump sum', unitPrice: 58000 },
+    { name: 'Kitchen cabinetry', quantity: 1, unit: 'lump sum', unitPrice: 58000 },
     { name: 'Quartz countertops', quantity: 52, unit: 'sq ft', unitPrice: 165 },
-    { name: 'Engineered hardwood flooring', quantity: 1270, unit: 'sq ft', unitPrice: 14.5 },
-    { name: 'Tile, fixtures, shower glass and waterproofing', quantity: 1, unit: 'allowance', unitPrice: 23040 },
-    { name: 'Decorative lighting', quantity: 1, unit: 'allowance', unitPrice: 15350 },
-    { name: 'Rough-in materials, protection and consumables', quantity: 1, unit: 'lump sum', unitPrice: 16300 },
-    { name: 'Material escalation and selection allowance', quantity: 1, unit: 'allowance', unitPrice: 12815 },
+    { name: 'Hardwood flooring', quantity: 1270, unit: 'sq ft', unitPrice: 14.5 },
+    { name: 'Bathroom tile, fixtures and glass', quantity: 1, unit: 'allowance', unitPrice: 23040 },
+    { name: 'Lighting and finishing materials', quantity: 1, unit: 'allowance', unitPrice: 15350 },
+    { name: 'Rough-in and site materials', quantity: 1, unit: 'lump sum', unitPrice: 16300 },
+    { name: 'Selection allowance', quantity: 1, unit: 'allowance', unitPrice: 12815 },
   ];
   const materialHtml = materialTableHtml(items);
   const mergeTags = [{ tag: 'material_pricing', value: materialHtml }];
