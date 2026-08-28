@@ -137,7 +137,7 @@
 
     .flow {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
       margin-top: 18px;
     }
@@ -193,6 +193,7 @@
     @media (max-width: 720px) { .g2, .g3 { grid-template-columns: 1fr; } }
 
     .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .field-label-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; }
     label, .label { font-weight: 500; font-size: 12px; letter-spacing: 0.025em; }
     .hint { color: var(--muted); font-size: 11.5px; }
     .required { color: var(--amber); }
@@ -230,32 +231,8 @@
       overflow-wrap: anywhere;
     }
 
-    .dictation-tools {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    .dictation-status { color: var(--muted); font-size: 12px; }
-    .dictation-status.listening { color: var(--blue); font-weight: 600; }
-
-    .mic-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      padding: 0;
-      border-radius: 50%;
-      background: var(--charcoal);
-      border-color: var(--charcoal);
-      color: #fff;
-    }
-
-    .mic-button svg { width: 21px; height: 21px; fill: currentColor; }
-    .mic-button.recording { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 5px rgba(230,94,50,.16); }
+    .dictation-status { margin: -8px 0 18px; padding: 9px 12px; border-left: 3px solid var(--line); color: var(--muted); background: #fafaf8; font-size: 12px; }
+    .dictation-status.listening { border-color: var(--blue); color: var(--blue); font-weight: 600; }
 
     .callout {
       border-left: 4px solid var(--blue);
@@ -290,6 +267,24 @@
     button:disabled { opacity: 0.45; cursor: not-allowed; }
     button:disabled:hover { background: inherit; color: inherit; }
 
+    .field-label-row .mic-button {
+      display: inline-flex;
+      flex: 0 0 30px;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid var(--charcoal);
+      color: var(--charcoal);
+    }
+
+    .field-label-row .mic-button:hover { background: var(--charcoal); color: #fff; }
+    .field-label-row .mic-button svg { width: 15px; height: 15px; fill: currentColor; }
+    .field-label-row .mic-button.recording { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 0 0 4px rgba(230,94,50,.14); }
+
     .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
     .form-start-actions {
@@ -310,6 +305,8 @@
 
     @media (max-width: 620px) {
       .form-start-actions { align-items: stretch; flex-direction: column; }
+      .section-head { align-items: flex-start; flex-wrap: wrap; }
+      .section-note { width: 100%; margin-left: 40px; }
     }
 
     .checklist { display: grid; gap: 8px; }
@@ -458,10 +455,11 @@
       <p>This test is intentionally centered on Better Proposals.</p>
       <div class="flow">
         <div><strong>1. Simple intake</strong>Typed or dictated notes, measurements, photos, objectives, and constraints.</div>
-        <div><strong>2. Proposal content</strong>Use sample estimate and scope content for the integration test.</div>
-        <div><strong>3. API draft</strong>Create a Better Proposals draft for JG review.</div>
-        <div><strong>4. JG review</strong>Approve inside Better Proposals. No send action exists here.</div>
-        <div><strong>5. Human send</strong>An authorized user sends the reviewed document to the entered recipient.</div>
+        <div><strong>2. AI estimate</strong>Future Visture estimating skill applies approved rates, markups, rules, and quote flags.</div>
+        <div><strong>3. Proposal assembly</strong>Approved estimate becomes client-facing summary, scope, pricing, and options.</div>
+        <div><strong>4. API draft</strong>Create a Better Proposals draft for final review.</div>
+        <div><strong>5. JG approval</strong>Review commercial assumptions and approve. No send action exists here.</div>
+        <div><strong>6. Human send</strong>An authorized user sends the reviewed document to the entered recipient.</div>
       </div>
     </div>
 
@@ -472,6 +470,8 @@
       </div>
       <button id="loadDemo" class="primary" type="button">Fill form with dummy data</button>
     </div>
+
+    <div id="dictationStatus" class="dictation-status">Microphone icons beside text fields add dictation to that field. Allow microphone access in your browser when prompted.</div>
 
     <section id="projectSection">
       <div class="section-head"><span class="number">01</span><h2>Project and test recipient</h2><span class="section-note">Minimal routing information</span></div>
@@ -492,17 +492,11 @@
     <section id="intakeSection">
       <div class="section-head"><span class="number">02</span><h2>Standard site intake</h2><span class="section-note">Focused site information</span></div>
       <div class="section-body">
-        <div class="callout">Use the microphone control to dictate directly into Site notes. Photograph files remain in the browser; a later GoHighLevel or Drive step will handle permanent storage.</div>
+        <div class="callout">Photograph files remain in the browser; a later GoHighLevel or Drive step will handle permanent storage. The POC records their filenames and photo notes only.</div>
         <div class="grid g2">
           <div class="field">
             <label>Site notes <span class="required">*</span></label>
             <textarea id="siteNotes" class="tall" placeholder="Type site notes or use voice dictation."></textarea>
-            <div class="dictation-tools">
-              <button id="dictationButton" class="mic-button" type="button" aria-label="Start voice dictation" title="Start voice dictation">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v7a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2Z"/></svg>
-              </button>
-              <span id="dictationStatus" class="dictation-status">Allow microphone access in your browser when prompted.</span>
-            </div>
           </div>
 
           <div class="field">
@@ -513,7 +507,7 @@
           <div class="upload-card">
             <div class="field"><label>Photographs</label><input id="photoFiles" type="file" multiple accept="image/*"></div>
             <div class="file-list" id="photoFileList">No photographs selected.</div>
-            <textarea id="photoNotes" placeholder="Describe the photographed areas or paste Drive references."></textarea>
+            <div class="field"><label>Photo notes</label><textarea id="photoNotes" placeholder="Describe the photographed areas or paste Drive references."></textarea></div>
           </div>
 
           <div class="field"><label>Client objectives <span class="required">*</span></label><textarea id="clientObjectives" class="tall" placeholder="What the client wants the project to accomplish."></textarea></div>
@@ -524,12 +518,18 @@
     </section>
 
     <section id="proposalSection">
-      <div class="section-head"><span class="number">03</span><h2>Proposal content for the API test</h2><span class="section-note">Sample output replaces full estimating automation in phase one</span></div>
+      <div class="section-head"><span class="number">03</span><h2>Estimate and proposal content</h2><span class="section-note">Structured test output; AI estimating is a later phase</span></div>
       <div class="section-body">
         <div class="callout warn">This is not the final estimating engine. It provides enough approved content to prove that Better Proposals receives and renders the data correctly.</div>
         <div class="grid g2">
           <div class="field"><label>Proposal summary <span class="required">*</span></label><textarea id="proposalSummary"></textarea></div>
           <div class="field"><label>Scope of work <span class="required">*</span></label><textarea id="scopeOfWork" class="tall"></textarea></div>
+          <div class="field"><label>Estimate organization <span class="required">*</span></label><select id="estimateGrouping"><option value="room">By room</option><option value="trade">By trade</option><option value="phase">By phase</option><option value="apartment">By apartment</option></select></div>
+          <div class="field"><label>Client-visible specifications</label><textarea id="clientSpecifications" placeholder="Finishes, systems, performance requirements, and value-defining details."></textarea></div>
+          <div class="field"><label>Material pricing <span class="required">*</span></label><textarea id="materialPricing" class="tall" placeholder="Material quantities, unit pricing, and subtotals."></textarea></div>
+          <div class="field"><label>Labour pricing <span class="required">*</span></label><textarea id="labourPricing" class="tall" placeholder="Labour hours, rates, and subtotals."></textarea></div>
+          <div class="field"><label>Allowances</label><textarea id="allowances" placeholder="Selection allowances and included amounts."></textarea></div>
+          <div class="field"><label>Quote-pending items</label><textarea id="quotePendingItems" placeholder="Trade or supplier quotations still required."></textarea></div>
           <div class="field"><label>Pricing summary <span class="required">*</span></label><textarea id="pricingSummary" class="tall"></textarea></div>
           <div class="field"><label>Proposal total</label><input id="proposalTotal" placeholder="CAD 125,000 before GST"></div>
           <div class="field"><label>Assumptions</label><textarea id="assumptions"></textarea></div>
@@ -701,61 +701,89 @@
 
   function setupDictation() {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const button = $('dictationButton');
     const status = $('dictationStatus');
+    const controls = [];
+
+    document.querySelectorAll('.field > textarea[id]').forEach((textarea) => {
+      const field = textarea.parentElement;
+      const label = Array.from(field.children).find((child) => child.tagName === 'LABEL');
+      if (!label) return;
+      const labelText = label.textContent.replace('*', '').trim();
+      const row = document.createElement('div');
+      row.className = 'field-label-row';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'mic-button';
+      button.setAttribute('aria-label', `Dictate ${labelText}`);
+      button.title = `Dictate ${labelText}`;
+      button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v7a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2Z"/></svg>';
+      field.insertBefore(row, label);
+      row.append(label, button);
+      controls.push({ button, textarea, labelText });
+    });
+
     if (!Recognition) {
-      button.disabled = true;
-      status.textContent = 'Voice dictation is not supported in this browser. You can still type notes.';
+      controls.forEach(({ button }) => { button.disabled = true; });
+      status.textContent = 'Voice dictation is not supported in this browser. All text fields remain available for typing.';
       return;
     }
 
-    const recognition = new Recognition();
-    recognition.lang = 'en-CA';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    let listening = false;
-    let startingText = '';
-    let finalTranscript = '';
+    let active = null;
 
-    recognition.addEventListener('start', () => {
-      listening = true;
-      startingText = value('siteNotes');
-      finalTranscript = '';
-      button.classList.add('recording');
-      button.setAttribute('aria-label', 'Stop voice dictation');
-      button.title = 'Stop voice dictation';
-      status.textContent = 'Listening… speak your site notes.';
-      status.className = 'dictation-status listening';
-    });
+    controls.forEach(({ button, textarea, labelText }) => {
+      button.addEventListener('click', () => {
+        if (active) {
+          const sameControl = active.button === button;
+          if (!sameControl) active.recognition.addEventListener('end', () => button.click(), { once: true });
+          active.recognition.stop();
+          return;
+        }
 
-    recognition.addEventListener('result', (event) => {
-      let interimTranscript = '';
-      for (let index = event.resultIndex; index < event.results.length; index += 1) {
-        const transcript = event.results[index][0].transcript.trim();
-        if (event.results[index].isFinal) finalTranscript += `${transcript} `;
-        else interimTranscript += `${transcript} `;
-      }
-      $('siteNotes').value = [startingText, finalTranscript.trim(), interimTranscript.trim()].filter(Boolean).join(' ');
-    });
+        const recognition = new Recognition();
+        recognition.lang = 'en-CA';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        const startingText = textarea.value.trim();
+        let finalTranscript = '';
+        active = { recognition, button };
 
-    recognition.addEventListener('error', (event) => {
-      const denied = event.error === 'not-allowed' || event.error === 'service-not-allowed';
-      status.textContent = denied ? 'Microphone access was not allowed.' : `Dictation stopped: ${event.error}.`;
-      status.className = 'dictation-status';
-    });
+        recognition.addEventListener('start', () => {
+          button.classList.add('recording');
+          button.setAttribute('aria-label', `Stop dictating ${labelText}`);
+          button.title = `Stop dictating ${labelText}`;
+          status.textContent = `Listening for ${labelText}…`;
+          status.className = 'dictation-status listening';
+        });
 
-    recognition.addEventListener('end', () => {
-      listening = false;
-      button.classList.remove('recording');
-      button.setAttribute('aria-label', 'Start voice dictation');
-      button.title = 'Start voice dictation';
-      if (status.classList.contains('listening')) status.textContent = 'Dictation ready. Tap the microphone to add more notes.';
-      status.className = 'dictation-status';
-    });
+        recognition.addEventListener('result', (event) => {
+          let interimTranscript = '';
+          for (let index = event.resultIndex; index < event.results.length; index += 1) {
+            const transcript = event.results[index][0].transcript.trim();
+            if (event.results[index].isFinal) finalTranscript += `${transcript} `;
+            else interimTranscript += `${transcript} `;
+          }
+          textarea.value = [startingText, finalTranscript.trim(), interimTranscript.trim()].filter(Boolean).join(' ');
+        });
 
-    button.addEventListener('click', () => {
-      if (listening) recognition.stop();
-      else recognition.start();
+        recognition.addEventListener('error', (event) => {
+          const denied = event.error === 'not-allowed' || event.error === 'service-not-allowed';
+          status.textContent = denied
+            ? 'Microphone access is not configured. Allow microphone access in your browser settings and try again.'
+            : `Dictation stopped: ${event.error}.`;
+          status.className = 'dictation-status';
+        });
+
+        recognition.addEventListener('end', () => {
+          button.classList.remove('recording');
+          button.setAttribute('aria-label', `Dictate ${labelText}`);
+          button.title = `Dictate ${labelText}`;
+          if (status.classList.contains('listening')) status.textContent = `Dictation added to ${labelText}.`;
+          status.className = 'dictation-status';
+          if (active && active.recognition === recognition) active = null;
+        });
+
+        recognition.start();
+      });
     });
   }
 
@@ -806,6 +834,12 @@
       proposal: {
         summary: value('proposalSummary'),
         scope: value('scopeOfWork'),
+        estimateGrouping: value('estimateGrouping'),
+        specifications: value('clientSpecifications'),
+        materials: value('materialPricing'),
+        labour: value('labourPricing'),
+        allowances: value('allowances'),
+        quotePending: value('quotePendingItems'),
         pricing: value('pricingSummary'),
         total: value('proposalTotal'),
         assumptions: value('assumptions'),
@@ -842,6 +876,9 @@
     if (!payload.intake.clientConstraints) missing.push('Client constraints');
     if (!payload.proposal.summary) missing.push('Proposal summary');
     if (!payload.proposal.scope) missing.push('Scope of work');
+    if (!payload.proposal.estimateGrouping) missing.push('Estimate organization');
+    if (!payload.proposal.materials) missing.push('Material pricing');
+    if (!payload.proposal.labour) missing.push('Labour pricing');
     if (!payload.proposal.pricing) missing.push('Pricing summary');
     if (!payload.betterProposals.templateId) missing.push('Better Proposals template ID');
     if (!health) missing.push('Completed server health check');
@@ -873,6 +910,22 @@
       '4. Main-area flooring replacement, baseboards, painting touch-ups, cleanup, and turnover.',
       '5. Final scope is subject to JG review and confirmation of open technical items.'
     ].join('\n');
+    $('estimateGrouping').value = 'room';
+    $('clientSpecifications').value = 'Kitchen: custom full-height cabinetry, quartz surfaces, LED task lighting, and durable wide-plank flooring. Primary bathroom: low-threshold shower, porcelain tile, waterproofing system, upgraded ventilation, and coordinated matte-black fixtures. All specifications are fictional and subject to selections.';
+    $('materialPricing').value = [
+      'Kitchen cabinetry, counters, fixtures, and finishes: CAD 82,000',
+      'Bathroom fixtures, tile, glass, and finishes: CAD 39,500',
+      'Flooring, trim, protection, and consumables: CAD 31,000',
+      'TEST MATERIAL SUBTOTAL: CAD 152,500'
+    ].join('\n');
+    $('labourPricing').value = [
+      'Site supervision, protection, demolition, and cleanup: CAD 29,500',
+      'Carpentry, cabinetry installation, and finishing: CAD 35,000',
+      'Plumbing, electrical, HVAC, tile, flooring, and painting labour: CAD 43,000',
+      'TEST LABOUR SUBTOTAL: CAD 107,500'
+    ].join('\n');
+    $('allowances').value = 'Included test allowances: decorative lighting CAD 6,000; plumbing fixtures CAD 9,000; tile CAD 12,000; hardware CAD 3,000.';
+    $('quotePendingItems').value = 'Pending confirmation: electrical panel capacity, slab scanning, custom shower glass, permit fees, and strata-required protection or deposits.';
     $('pricingSummary').value = [
       'Pre-construction and site protection: CAD 12,500',
       'Kitchen renovation: CAD 138,000',
@@ -955,6 +1008,12 @@
     appendPreviewBlock(content, 'Client objectives', payload.intake.clientObjectives);
     appendPreviewBlock(content, 'Client constraints', payload.intake.clientConstraints);
     appendPreviewBlock(content, 'Scope of work', payload.proposal.scope);
+    appendPreviewBlock(content, 'Estimate organization', `By ${payload.proposal.estimateGrouping}`);
+    appendPreviewBlock(content, 'Client-visible specifications', payload.proposal.specifications);
+    appendPreviewBlock(content, 'Material pricing', payload.proposal.materials);
+    appendPreviewBlock(content, 'Labour pricing', payload.proposal.labour);
+    appendPreviewBlock(content, 'Allowances', payload.proposal.allowances);
+    appendPreviewBlock(content, 'Quote-pending items', payload.proposal.quotePending);
     appendPreviewBlock(content, 'Pricing summary', payload.proposal.pricing);
     appendPreviewBlock(content, 'Proposal total', payload.proposal.total);
     appendPreviewBlock(content, 'Assumptions', payload.proposal.assumptions);
@@ -1098,7 +1157,7 @@
       if (Array.isArray(data.documentTypes)) setOptions($('documentType'), data.documentTypes, '', true);
       if (Array.isArray(data.currencies)) setOptions($('currency'), data.currencies, '', true, currencyCode);
       if (Array.isArray(data.brands)) setOptions($('brandId'), data.brands, 'Default brand', false);
-      const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
+      const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','estimate_grouping','client_specifications','material_pricing','labour_pricing','allowances','quote_pending_items','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
       const accountTags = Array.isArray(data.mergeTags) ? data.mergeTags.map((item) => mergeTagName(item, recordName(item, ''))) : [];
       const missingTags = requiredTags.filter((tag) => !accountTags.includes(tag));
       const coreListsReady = Array.isArray(data.templates) && data.templates.length > 0

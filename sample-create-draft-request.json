@@ -24,6 +24,12 @@
   "proposal": {
     "summary": "Fictional proposal summary for connection testing.",
     "scope": "Fictional scope of work for connection testing.",
+    "estimateGrouping": "room",
+    "specifications": "Fictional client-visible specifications.",
+    "materials": "TEST MATERIAL SUBTOTAL: CAD 152,500.",
+    "labour": "TEST LABOUR SUBTOTAL: CAD 107,500.",
+    "allowances": "Fictional allowances totalling CAD 30,000.",
+    "quotePending": "Fictional trade and supplier quotations pending.",
     "pricing": "TEST BASE TOTAL: CAD 280,000 before GST.",
     "total": "CAD 280,000 before GST - TEST ONLY",
     "assumptions": "Fictional assumptions.",

@@ -5,7 +5,7 @@
 This package tests the most important workflow in JG's investigation brief:
 
 1. Capture a simple site intake.
-2. Prepare test proposal content.
+2. Prepare structured test estimate and proposal content.
 3. Create a branded Better Proposals draft through the API.
 4. Hold the document for JG's final review.
 5. Let an authorized human send it to the test recipient entered in the intake form.
@@ -47,6 +47,7 @@ Even with Manager Approvals, Better Proposals' documented flow requires an autho
 - `BETTER_PROPOSALS_SETUP_CHECKLIST.md` - exact account items needed.
 - `TEMPLATE_MAPPING.md` - custom merge-tag and template design.
 - `TEST_SCRIPT.md` - acceptance-test steps for JG and the entered test recipient.
+- `INVESTIGATION_BRIEF_ALIGNMENT.md` - requirement-by-requirement POC coverage, gaps, and next implementation gates.
 - `sample-create-draft-request.json` - sample payload shape.
 - `test.js` - automated mock-mode safety test.
 
@@ -134,7 +135,7 @@ Never commit `.env`. Vercel Functions have ephemeral local storage, so the local
 
 ## Template limitations to test
 
-The published create-proposal endpoint accepts custom merge-tag values, but it does not document dynamic pricing-table rows, dynamic image insertion, or variable page creation. Therefore, phase one maps scope and pricing into multiline merge tags inside a fixed Visture template.
+The published create-proposal endpoint accepts custom merge-tag values, but it does not document dynamic pricing-table rows, dynamic image insertion, or variable page creation. Therefore, phase one maps scope, specifications, material and labour pricing, allowances, quote-pending items, and summary pricing into multiline merge tags inside a fixed Visture template.
 
 The live POC must answer:
 

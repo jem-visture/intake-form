@@ -7,11 +7,12 @@
 3. Executive summary
 4. Client objectives and constraints
 5. Detailed scope of work
-6. Pricing summary
-7. Assumptions
-8. Exclusions
-9. Options
-10. Acceptance and Digital Signature
+6. Client-visible specifications
+7. Estimate organization and detailed pricing
+8. Allowances and quote-pending items
+9. Pricing summary
+10. Assumptions, exclusions, and options
+11. Acceptance and Digital Signature
 
 ## Merge-tag placement
 
@@ -23,6 +24,12 @@
 | Client context | `{{client_objectives}}` | Standard site intake |
 | Client context | `{{client_constraints}}` | Standard site intake |
 | Scope section | `{{scope_of_work}}` | Approved scope text |
+| Estimate heading | `{{estimate_grouping}}` | Room, trade, phase, or apartment grouping |
+| Specifications section | `{{client_specifications}}` | Client-visible finishes and performance details |
+| Detailed pricing | `{{material_pricing}}` | Approved material quantities and pricing |
+| Detailed pricing | `{{labour_pricing}}` | Approved labour hours, rates, and pricing |
+| Commercial section | `{{allowances}}` | Approved selection allowances |
+| Commercial section | `{{quote_pending_items}}` | Trade or supplier quotes still required |
 | Pricing section | `{{pricing_summary}}` | Approved pricing text |
 | Pricing total | `{{proposal_total}}` | Approved total |
 | Commercial section | `{{assumptions}}` | Approved assumptions |
@@ -36,7 +43,7 @@ Recipient name and email should be sent through the Better Proposals `Contacts` 
 
 ## Phase-one pricing design
 
-Use `{{pricing_summary}}` as a multiline block for the initial connection test. This proves that the approved estimate can reach the proposal without depending on undocumented dynamic pricing-table behavior.
+Use the structured multiline tags `{{material_pricing}}`, `{{labour_pricing}}`, `{{allowances}}`, `{{quote_pending_items}}`, and `{{pricing_summary}}` for the initial connection test. This proves that the approved estimate categories can reach the proposal without depending on undocumented dynamic pricing-table behavior.
 
 After that works, test whether Better Proposals can reliably support:
 
@@ -47,6 +54,18 @@ After that works, test whether Better Proposals can reliably support:
 - Automatic totals that match the estimating output.
 
 The public API documentation does not establish that these dynamic table operations are supported.
+
+### Native pricing-table validation
+
+Better Proposals templates can contain native pricing tables, including multiple tables, quantities, options, and calculated totals. However, the published create endpoint documents template selection and merge-tag values—not pricing-table row creation or updates.
+
+Use this controlled test before relying on native table automation:
+
+1. Add a small native pricing table to a disposable copy of the Visture template.
+2. Test whether merge tags are accepted in the supported description, quantity, and price cells.
+3. Create one draft with known fictional values and compare every displayed line, tax calculation, option, and total with the source payload.
+4. Test a second estimate with a different number of rows. If the template cannot grow or shrink through a documented mechanism, keep the detailed estimate in multiline content and use the native table only for fixed headline totals or manual JG editing.
+5. Do not describe dynamic pricing-table mapping as supported until both tests pass without manual correction.
 
 ## Images
 

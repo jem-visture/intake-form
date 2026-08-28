@@ -205,6 +205,12 @@ function buildMergeTags(body) {
     client_constraints: intake.clientConstraints,
     proposal_summary: proposal.summary,
     scope_of_work: proposal.scope,
+    estimate_grouping: proposal.estimateGrouping,
+    client_specifications: proposal.specifications,
+    material_pricing: proposal.materials,
+    labour_pricing: proposal.labour,
+    allowances: proposal.allowances,
+    quote_pending_items: proposal.quotePending,
     pricing_summary: proposal.pricing,
     assumptions: proposal.assumptions,
     exclusions: proposal.exclusions,
@@ -265,6 +271,9 @@ function validateCreateRequest(body) {
   requiredString(body.intakeId, 'Intake ID');
   requiredString(body.project && body.project.name, 'Project name');
   requiredString(body.proposal && body.proposal.scope, 'Proposal scope');
+  requiredString(body.proposal && body.proposal.estimateGrouping, 'Estimate organization');
+  requiredString(body.proposal && body.proposal.materials, 'Material pricing');
+  requiredString(body.proposal && body.proposal.labour, 'Labour pricing');
   requiredString(body.proposal && body.proposal.pricing, 'Pricing summary');
   requiredString(body.betterProposals && body.betterProposals.templateId, 'Better Proposals template ID');
   return recipientEmail;
@@ -280,8 +289,10 @@ async function discoverBetterProposals() {
       brands: [{ id: 'MOCK-BRAND-01', name: 'Visture' }],
       mergeTags: [
         'project_name', 'site_address', 'client_objectives', 'client_constraints',
-        'proposal_summary', 'scope_of_work', 'pricing_summary', 'assumptions',
-        'exclusions', 'options', 'proposal_total', 'intake_reference',
+        'proposal_summary', 'scope_of_work', 'estimate_grouping', 'client_specifications',
+        'material_pricing', 'labour_pricing', 'allowances', 'quote_pending_items',
+        'pricing_summary', 'assumptions', 'exclusions', 'options', 'proposal_total',
+        'intake_reference',
       ].map((tag) => ({ tag, name: tag })),
       settings: { note: 'Mock mode: add a real API token in .env to query the account.' },
     };

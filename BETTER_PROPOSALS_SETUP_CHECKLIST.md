@@ -30,6 +30,12 @@ Create these under `Settings > Setup > Custom Merge Tags` and place them in the 
 - [ ] `client_constraints`
 - [ ] `proposal_summary`
 - [ ] `scope_of_work`
+- [ ] `estimate_grouping`
+- [ ] `client_specifications`
+- [ ] `material_pricing`
+- [ ] `labour_pricing`
+- [ ] `allowances`
+- [ ] `quote_pending_items`
 - [ ] `pricing_summary`
 - [ ] `assumptions`
 - [ ] `exclusions`

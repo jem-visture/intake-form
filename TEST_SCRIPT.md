@@ -43,11 +43,16 @@ Pass condition: exactly one unsent Better Proposals draft exists for the test re
 - [ ] Confirm the proposal summary.
 - [ ] Confirm objectives and constraints.
 - [ ] Confirm the full scope.
+- [ ] Confirm the selected estimate organization is shown.
+- [ ] Confirm client-visible specifications are clear and persuasive.
+- [ ] Confirm material and labour pricing appear separately.
+- [ ] Confirm allowances and quote-pending items are clearly identified.
 - [ ] Confirm pricing and total.
 - [ ] Confirm assumptions, exclusions, and options.
 - [ ] Confirm there are no visible raw merge tags.
 - [ ] Confirm the Digital Signature block exists.
 - [ ] Confirm the entered recipient is eligible or required to sign.
+- [ ] If a native pricing table is being tested, confirm its source rows, quantities, options, tax, and calculated total match the approved estimate exactly.
 
 Pass condition: the draft is client-presentable after normal JG review and minor edits.
 

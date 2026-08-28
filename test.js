@@ -74,6 +74,16 @@ async function main() {
     assert(first.data.duplicatePrevented === false, 'First draft should not be marked duplicate.');
     assert(first.data.draft.safety.sendEndpointExposedByThisPOC === false, 'Draft safety flag is incorrect.');
 
+    const incompleteEstimate = JSON.parse(JSON.stringify(sample));
+    incompleteEstimate.intakeId = `VST-BP-TEST-INCOMPLETE-${Date.now()}`;
+    incompleteEstimate.proposal.materials = '';
+    const rejectedEstimate = await request('/api/bp/create-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(incompleteEstimate),
+    });
+    assert(rejectedEstimate.response.status === 400, 'Missing material pricing should block draft creation.');
+
     const second = await request('/api/bp/create-draft', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
