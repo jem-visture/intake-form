@@ -547,7 +547,6 @@
           <div class="field"><label>Client objectives <span class="required">*</span></label><textarea id="clientObjectives" class="tall" placeholder="What the client wants the project to accomplish."></textarea></div>
           <div class="field"><label>Client constraints <span class="required">*</span></label><textarea id="clientConstraints" class="tall" placeholder="Budget, timing, access, building rules, risk, selections, or other constraints."></textarea></div>
         </div>
-        <div class="actions"><button id="showIntake" type="button">Preview intake JSON</button></div>
       </div>
     </section>
 
@@ -674,7 +673,10 @@
         <div class="status-row"><span>Draft creation</span><span class="status warn" id="draftStatus">Not run</span></div>
         <div class="status-row"><span>JG page review</span><span class="status warn" id="reviewStatus">Not reviewed</span></div>
         <div class="status-row"><span>Auto-send</span><span class="status good">Disabled</span></div>
-        <div class="actions"><button id="showPayload" type="button">Preview Better Proposals request</button></div>
+        <div class="actions">
+          <button id="showIntake" type="button">Preview intake JSON</button>
+          <button id="showPayload" type="button">Preview Better Proposals request</button>
+        </div>
       </div>
     </div>
 
