@@ -621,7 +621,7 @@
           <div class="actions">
             <button id="markApprovedButton" class="good" type="button" disabled>Record JG approval on this page</button>
             <button id="markChangesButton" type="button" disabled>Request changes</button>
-            <a id="nativeApprovalLink" class="button-link" href="https://betterproposals.io/" target="_blank" rel="noopener noreferrer">Open Better Proposals</a>
+            <a id="nativeApprovalLink" class="button-link" href="https://betterproposals.io/2/proposals/" target="_blank" rel="noopener noreferrer">Open Better Proposals</a>
           </div>
         </div>
 
@@ -1195,7 +1195,6 @@
       link.textContent = 'Open exact Better Proposals draft';
       linkWrap.appendChild(link);
       content.appendChild(linkWrap);
-      $('nativeApprovalLink').href = reviewUrl;
     }
 
     paper.append(cover, content);
