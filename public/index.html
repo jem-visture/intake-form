@@ -347,9 +347,17 @@
 
     .form-start-actions p { margin: 0; color: var(--muted); font-size: 13px; }
     .form-start-actions button { flex: 0 0 auto; }
+    .test-source-control { display: flex; align-items: center; gap: 9px; margin-top: 10px; }
+    .test-source-control label { flex: 0 0 auto; }
+    .test-source-control select { min-width: 220px; }
+    .local-agent-panel { grid-column: 1 / -1; border: 1px solid var(--line); border-left: 5px solid var(--blue); background: #f7fafb; padding: 14px; }
+    .local-agent-panel .actions { align-items: center; }
+    .local-agent-status { color: var(--muted); font-size: 12px; }
 
     @media (max-width: 620px) {
       .form-start-actions { align-items: stretch; flex-direction: column; }
+      .test-source-control { align-items: stretch; flex-direction: column; }
+      .test-source-control select { min-width: 0; }
       .section-head { align-items: flex-start; flex-wrap: wrap; }
       .section-note { width: 100%; margin-left: 40px; }
       .line-items-head { display: none; }
@@ -518,7 +526,14 @@
     <div class="form-start-actions">
       <div>
         <h3>Testing the workflow?</h3>
-        <p>Populate the intake and proposal fields with safe fictional content, then confirm the recipient and account settings.</p>
+        <p>Choose whether Section 3 uses built-in dummy estimates or your local estimator agent. Local-agent mode loads dummy data into Sections 1–2 only.</p>
+        <div class="test-source-control">
+          <label for="estimatorTestSource">Estimate test source</label>
+          <select id="estimatorTestSource">
+            <option value="dummy">Built-in dummy data (Sections 1–3)</option>
+            <option value="local-agent">Local agent (dummy Sections 1–2 only)</option>
+          </select>
+        </div>
       </div>
       <button id="loadDemo" class="primary" type="button">Fill form with dummy data</button>
     </div>
@@ -573,6 +588,17 @@
       <div class="section-body">
         <div class="callout warn">This is not the final estimating engine. It provides enough approved content to prove that Better Proposals receives and renders the data correctly.</div>
         <div class="grid g2">
+          <div id="localAgentPanel" class="local-agent-panel" hidden>
+            <div class="field">
+              <label for="localAgentUrl">Local estimator endpoint</label>
+              <input id="localAgentUrl" type="url" value="http://127.0.0.1:8788/estimate" spellcheck="false">
+              <span class="hint">The browser sends Sections 1–2 and selected photographs directly to this endpoint. The agent must return the documented Section 3 JSON structure.</span>
+            </div>
+            <div class="actions">
+              <button id="runLocalAgent" class="primary" type="button">Generate Section 3 with local agent</button>
+              <span id="localAgentStatus" class="local-agent-status">Waiting for intake.</span>
+            </div>
+          </div>
           <div class="field"><label>Proposal summary <span class="required">*</span></label><textarea id="proposalSummary"></textarea></div>
           <div class="field"><label>Scope of work <span class="required">*</span></label><textarea id="scopeOfWork" class="tall"></textarea></div>
           <div class="field"><label>Estimate organization <span class="required">*</span></label><select id="estimateGrouping"><option value="room">By room</option><option value="trade">By trade</option><option value="phase">By phase</option><option value="apartment">By apartment</option></select></div>
@@ -747,7 +773,7 @@
     'estimateGrouping', 'clientSpecifications', 'laborHours', 'laborHourlyRate',
     'allowances', 'quotePendingItems', 'pricingSummary', 'proposalTotal',
     'assumptions', 'exclusions', 'options', 'contentReady', 'jgReviewer',
-    'testRecipientConfirmed',
+    'testRecipientConfirmed', 'estimatorTestSource', 'localAgentUrl',
   ];
 
   function fileNames(input) {
@@ -1079,6 +1105,7 @@
       if (element.type === 'checkbox') element.checked = false;
       else element.value = '';
     });
+    $('estimatorTestSource').value = 'dummy';
     setMaterialLineItems([]);
     $('photoFiles').value = '';
     $('photoFileList').textContent = 'No photographs selected.';
@@ -1098,6 +1125,7 @@
     $('markChangesButton').disabled = true;
     updateMaterialTotals();
     updateRecipientStatus();
+    updateEstimatorTestSource();
     statusClass($('draftStatus'), 'warn', 'Not run');
     statusClass($('reviewStatus'), 'warn', 'Not reviewed');
     setFormSaveStatus('warn', 'Cleared');
@@ -1108,9 +1136,11 @@
   $('laborHourlyRate').addEventListener('input', updateEstimateTotals);
   addMaterialLineItem();
   restoreFormDraft();
+  updateEstimatorTestSource();
   document.querySelector('main').addEventListener('input', scheduleAutosave);
   document.querySelector('main').addEventListener('change', scheduleAutosave);
   $('clearFormButton').addEventListener('click', clearFormDraft);
+  $('estimatorTestSource').addEventListener('change', updateEstimatorTestSource);
 
   function updateRecipientStatus() {
     const email = value('recipientEmail').toLowerCase();
@@ -1201,8 +1231,157 @@
     return missing;
   }
 
+  function updateEstimatorTestSource() {
+    const localMode = value('estimatorTestSource') === 'local-agent';
+    $('localAgentPanel').hidden = !localMode;
+    $('loadDemo').textContent = localMode ? 'Fill intake with dummy data' : 'Fill form with dummy data';
+  }
+
+  function clearSectionThree() {
+    [
+      'proposalSummary', 'scopeOfWork', 'clientSpecifications', 'laborHours',
+      'allowances', 'quotePendingItems', 'pricingSummary', 'proposalTotal',
+      'assumptions', 'exclusions', 'options',
+    ].forEach((id) => { $(id).value = ''; });
+    $('estimateGrouping').value = 'room';
+    $('laborHourlyRate').value = '75';
+    setMaterialLineItems([]);
+    updateEstimateTotals();
+  }
+
+  function localAgentRequestPayload() {
+    return {
+      schemaVersion: '1.0',
+      project: {
+        intakeId: value('intakeId'),
+        revision: value('revision') || '1',
+        name: value('projectName'),
+        siteAddress: value('siteAddress'),
+      },
+      intake: {
+        siteNotes: value('siteNotes'),
+        measurements: value('measurements'),
+        photoNotes: value('photoNotes'),
+        photographs: fileNames($('photoFiles')),
+        clientObjectives: value('clientObjectives'),
+        clientConstraints: value('clientConstraints'),
+      },
+      estimatingRules: {
+        currency: 'CAD',
+        laborHourlyRate: 75,
+        targetProjectValue: 'over 50000 CAD',
+        requireHumanReview: true,
+      },
+    };
+  }
+
+  function validateLocalAgentIntake(request) {
+    const missing = [];
+    if (!request.project.name) missing.push('Project name');
+    if (!request.intake.siteNotes) missing.push('Site notes');
+    if (!request.intake.measurements) missing.push('Measurements');
+    if (!request.intake.clientObjectives) missing.push('Client objectives');
+    if (!request.intake.clientConstraints) missing.push('Client constraints');
+    return missing;
+  }
+
+  function normalizeAgentMaterialItems(valueToNormalize) {
+    if (!Array.isArray(valueToNormalize) || !valueToNormalize.length) throw new Error('The local agent returned no material line items.');
+    const supportedUnits = new Set(['each', 'sq ft', 'linear ft', 'allowance', 'lump sum']);
+    return valueToNormalize.map((item, index) => {
+      const row = item && typeof item === 'object' ? item : {};
+      const name = String(row.name || '').trim();
+      const quantity = Number(row.quantity);
+      const unitPrice = Number(row.unitPrice);
+      const unit = String(row.unit || '').trim();
+      if (!name) throw new Error(`Local agent material item ${index + 1} has no name.`);
+      if (!Number.isFinite(quantity) || quantity <= 0) throw new Error(`Local agent material item ${index + 1} has an invalid quantity.`);
+      if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new Error(`Local agent material item ${index + 1} has an invalid unit price.`);
+      if (!supportedUnits.has(unit)) throw new Error(`Local agent material item ${index + 1} uses unsupported unit "${unit}".`);
+      return { area: String(row.area || '').trim(), name, quantity, unit, unitPrice };
+    });
+  }
+
+  function applyLocalAgentProposal(responseData) {
+    const proposal = responseData && responseData.proposal ? responseData.proposal : responseData;
+    if (!proposal || typeof proposal !== 'object') throw new Error('The local agent response does not contain a proposal object.');
+    const items = normalizeAgentMaterialItems(proposal.materialLineItems);
+    const labor = proposal.laborEstimate && typeof proposal.laborEstimate === 'object' ? proposal.laborEstimate : {};
+    const laborHours = Number(labor.hours);
+    if (!Number.isFinite(laborHours) || laborHours <= 0) throw new Error('The local agent returned invalid labour hours.');
+    const grouping = String(proposal.estimateGrouping || 'room').trim();
+    if (!['room', 'trade', 'phase', 'apartment'].includes(grouping)) throw new Error('The local agent returned an unsupported estimate grouping.');
+    if (!String(proposal.summary || '').trim()) throw new Error('The local agent returned no proposal summary.');
+    if (!String(proposal.scope || '').trim()) throw new Error('The local agent returned no scope of work.');
+
+    $('proposalSummary').value = String(proposal.summary || '').trim();
+    $('scopeOfWork').value = String(proposal.scope || '').trim();
+    $('estimateGrouping').value = grouping;
+    $('clientSpecifications').value = String(proposal.specifications || '').trim();
+    setMaterialLineItems(items);
+    $('laborHours').value = String(laborHours);
+    $('laborHourlyRate').value = '75';
+    $('allowances').value = String(proposal.allowances || '').trim();
+    $('quotePendingItems').value = String(proposal.quotePending || '').trim();
+    $('pricingSummary').value = String(proposal.pricingNotes || '').trim();
+    $('assumptions').value = String(proposal.assumptions || '').trim();
+    $('exclusions').value = String(proposal.exclusions || '').trim();
+    $('options').value = String(proposal.options || '').trim();
+    updateEstimateTotals();
+    const materialSubtotal = readMaterialLineItems().reduce((sum, item) => sum + item.total, 0);
+    const combinedTotal = materialSubtotal + readLaborEstimate().total;
+    $('proposalTotal').value = String(proposal.total || `${cad.format(combinedTotal)} before GST`).trim();
+    saveFormDraft();
+  }
+
+  async function runLocalEstimatorAgent() {
+    const status = $('localAgentStatus');
+    const button = $('runLocalAgent');
+    const request = localAgentRequestPayload();
+    const missing = validateLocalAgentIntake(request);
+    if (missing.length) {
+      status.textContent = `Complete before estimating: ${missing.join('; ')}.`;
+      return;
+    }
+    let endpoint;
+    try {
+      endpoint = new URL(value('localAgentUrl'));
+      if (!['http:', 'https:'].includes(endpoint.protocol)) throw new Error('Unsupported protocol.');
+    } catch (_error) {
+      status.textContent = 'Enter a valid HTTP or HTTPS local estimator endpoint.';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('request', JSON.stringify(request));
+    Array.from($('photoFiles').files || []).forEach((file) => formData.append('photographs', file, file.name));
+    button.disabled = true;
+    status.textContent = 'Waiting for the local estimator agent…';
+    try {
+      const response = await fetch(endpoint.href, { method: 'POST', body: formData });
+      let data;
+      try { data = await response.json(); }
+      catch (_error) { throw new Error('The local agent returned an unreadable response.'); }
+      if (!response.ok) throw new Error(data.message || `Local agent HTTP ${response.status}.`);
+      applyLocalAgentProposal(data);
+      const warnings = Array.isArray(data.warnings) ? data.warnings.filter(Boolean) : [];
+      const missingInformation = Array.isArray(data.missingInformation) ? data.missingInformation.filter(Boolean) : [];
+      status.textContent = [
+        'Section 3 populated by the local estimator agent.',
+        warnings.length ? `Warnings: ${warnings.join('; ')}.` : '',
+        missingInformation.length ? `Missing information: ${missingInformation.join('; ')}.` : '',
+      ].filter(Boolean).join(' ');
+    } catch (error) {
+      saveFormDraft();
+      status.textContent = `${error.message} Intake values remain saved; correct the connection and try again.`;
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   function loadDemo() {
     const existingRecipientEmail = value('recipientEmail');
+    const localAgentMode = value('estimatorTestSource') === 'local-agent';
     $('intakeId').value = 'VST-BP-POC-DUMMY-001';
     $('revision').value = '1';
     $('projectName').value = 'TEST ONLY - Harbour View Condo Renovation';
@@ -1217,6 +1396,13 @@
     $('photoNotes').value = 'Fictional photo references: kitchen north wall, island plumbing location, primary bathroom shower, electrical panel, corridor protection route.';
     $('clientObjectives').value = 'Create a calm, modern long-term home with a larger entertaining kitchen, a safer spa-like primary bathroom, durable finishes, and transparent pricing.';
     $('clientConstraints').value = 'Test budget target below CAD 350,000 before tax. Condo access and noise restrictions apply. Final appliance loads, slab penetrations, and permit requirements must be confirmed.';
+    if (localAgentMode) {
+      clearSectionThree();
+      $('localAgentStatus').textContent = 'Dummy intake loaded. Generate Section 3 with the local agent when it is running.';
+      updateRecipientStatus();
+      saveFormDraft();
+      return;
+    }
     $('proposalSummary').value = 'Visture will transform the test condo into a brighter, safer, and more functional long-term home. The proposal clearly separates the core renovation scope, allowances, exclusions, and optional upgrades so the client can make an informed decision without hidden assumptions.';
     $('scopeOfWork').value = [
       '1. Pre-construction planning, protection, permits, and site logistics.',
@@ -1251,6 +1437,7 @@
   }
 
   $('loadDemo').addEventListener('click', loadDemo);
+  $('runLocalAgent').addEventListener('click', runLocalEstimatorAgent);
   $('showIntake').addEventListener('click', () => showDialog('Simple site intake JSON', intakePayload().intake));
   $('showPayload').addEventListener('click', () => showDialog('Better Proposals draft request', intakePayload()));
 

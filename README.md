@@ -54,6 +54,7 @@ Even with Manager Approvals, Better Proposals' documented flow requires an autho
 - `Visture Proposal Template - Merge Tags Updated.docx` - edited placement guide with every current custom and built-in merge tag in context.
 - `VISTURE_TEMPLATE_TAG_PLACEMENT.md` - section-by-section reference for recreating the layout in Better Proposals.
 - `TEST_SCRIPT.md` - acceptance-test steps for JG and the entered test recipient.
+- `LOCAL_ESTIMATOR_AGENT.md` - request and response contract for filling Section 3 from a Mac Studio estimator agent.
 - `INVESTIGATION_BRIEF_ALIGNMENT.md` - requirement-by-requirement POC coverage, gaps, and next implementation gates.
 - `sample-create-draft-request.json` - sample payload shape.
 - `test.js` - automated mock-mode safety test.
