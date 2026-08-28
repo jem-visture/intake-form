@@ -5,7 +5,9 @@
   "description": "Draft-only Better Proposals proof of concept for Visture",
   "scripts": {
     "start": "node server.js",
-    "test": "node test.js"
+    "start:local-agent": "node local-agent/server.mjs",
+    "test": "node test.js",
+    "test:local-agent": "node local-agent/test.mjs"
   },
   "engines": {
     "node": ">=18"

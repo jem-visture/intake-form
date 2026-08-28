@@ -507,16 +507,11 @@
     }
 
     .proposal-preview.show { display: block; }
-    .proposal-paper { max-width: 780px; margin: 0 auto; background: #fff; box-shadow: 0 14px 38px rgba(41,40,36,.14); }
-    .proposal-cover { background: var(--charcoal-deep); color: #fff; padding: 48px 40px; border-top: 7px solid var(--blue); }
-    .proposal-cover img { width: 210px; max-width: 65%; filter: brightness(0) invert(1); margin-bottom: 38px; }
-    .proposal-cover h3 { color: #fff; font-size: clamp(26px, 4vw, 42px); line-height: 1.1; text-transform: uppercase; }
-    .proposal-cover p { color: #d8d7d2; }
-    .proposal-content { padding: 36px 40px 44px; }
-    .proposal-block { padding: 20px 0; border-bottom: 1px solid var(--line); }
-    .proposal-block:last-child { border-bottom: 0; }
-    .proposal-block h4 { margin: 0 0 9px; color: var(--blue); text-transform: uppercase; letter-spacing: .05em; font-size: 13px; }
-    .proposal-block p { white-space: pre-line; }
+    .better-proposals-review-card { max-width: 780px; margin: 0 auto; padding: 26px; border-top: 5px solid var(--blue); background: #fff; box-shadow: 0 10px 28px rgba(41,40,36,.12); }
+    .better-proposals-review-card .eyebrow { display: inline-block; margin-bottom: 12px; color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .better-proposals-review-card h3 { margin-bottom: 8px; }
+    .better-proposals-review-card p { color: var(--muted); }
+    .better-proposals-exact-preview { width: 100%; min-height: 760px; margin-top: 18px; border: 1px solid var(--line); background: #fff; }
 
     .review-panel { margin-top: 18px; padding: 18px; border: 1px solid var(--line); border-left: 4px solid var(--blue); background: #fafaf8; }
     .review-state { display: inline-block; margin-bottom: 12px; padding: 6px 9px; background: var(--charcoal); color: #fff; font-weight: 600; font-size: 12px; text-transform: uppercase; }
@@ -537,6 +532,8 @@
     }
 
     .button-link:hover { background: #c94b25; color: #fff; }
+    .button-link.secondary { background: #fff; color: var(--blue); }
+    .button-link.secondary:hover { background: var(--blue); color: #fff; }
 
     .small-code {
       font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -724,7 +721,7 @@
     </section>
 
     <section id="approvalSection">
-      <div class="section-head"><span class="number">05</span><h2>Preview and JG approval</h2><span class="section-note">Review here; native approval in Better Proposals</span></div>
+      <div class="section-head"><span class="number">05</span><h2>Better Proposals review and JG approval</h2><span class="section-note">Open the exact Better Proposals document</span></div>
       <div class="section-body">
         <div class="callout warn"><strong>Approval boundary:</strong> recording JG's decision here does not call a Better Proposals approval or send action. Native Manager Approval must still be completed by JG inside Better Proposals.</div>
 
@@ -1594,47 +1591,6 @@
     element.textContent = text;
   }
 
-  function appendPreviewBlock(container, heading, content) {
-    if (!content) return;
-    const block = document.createElement('div');
-    block.className = 'proposal-block';
-    const title = document.createElement('h4');
-    title.textContent = heading;
-    const body = document.createElement('p');
-    body.textContent = content;
-    block.append(title, body);
-    container.appendChild(block);
-  }
-
-  function appendMaterialPricingTable(container, items) {
-    if (!Array.isArray(items) || !items.length) return;
-    const block = document.createElement('div');
-    block.className = 'proposal-block';
-    const heading = document.createElement('h4');
-    heading.textContent = 'Itemized material pricing';
-    const table = document.createElement('table');
-    table.className = 'preview-pricing-table';
-    const head = document.createElement('thead');
-    head.innerHTML = '<tr><th>Area</th><th>Material or item</th><th class="numeric">Qty</th><th>Unit</th><th class="numeric">Unit price</th><th class="numeric">Total</th></tr>';
-    const body = document.createElement('tbody');
-    items.forEach((item) => {
-      const row = document.createElement('tr');
-      [item.area || 'General', item.name, item.quantity, item.unit, cad.format(item.unitPrice), cad.format(item.total)].forEach((content, index) => {
-        const cell = document.createElement('td');
-        cell.textContent = content;
-        if (index === 2 || index >= 4) cell.className = 'numeric';
-        row.appendChild(cell);
-      });
-      body.appendChild(row);
-    });
-    table.append(head, body);
-    const total = document.createElement('div');
-    total.className = 'preview-pricing-total';
-    total.textContent = `Materials subtotal: ${cad.format(items.reduce((sum, item) => sum + item.total, 0))}`;
-    block.append(heading, table, total);
-    container.appendChild(block);
-  }
-
   function safeHttpUrl(candidate) {
     try {
       const url = new URL(candidate);
@@ -1649,56 +1605,68 @@
     preview.textContent = '';
 
     const note = document.createElement('div');
-    note.className = 'callout';
-    note.textContent = 'On-page content preview. Open the returned Better Proposals link to verify the exact selected template, pricing blocks, fonts, and pagination.';
+    note.className = 'callout warn';
+    note.textContent = 'The Better Proposals template is rendered by Better Proposals. Use the links below to review the exact document; this intake page does not reproduce the template.';
 
-    const paper = document.createElement('article');
-    paper.className = 'proposal-paper';
-    const cover = document.createElement('div');
-    cover.className = 'proposal-cover';
-    const logo = document.createElement('img');
-    logo.src = '/assets/visture-logo.png';
-    logo.alt = 'Visture Property Group';
+    const card = document.createElement('article');
+    card.className = 'better-proposals-review-card';
+    const eyebrow = document.createElement('span');
+    eyebrow.className = 'eyebrow';
+    eyebrow.textContent = 'Draft created in Better Proposals';
     const projectName = document.createElement('h3');
-    projectName.textContent = payload.project.name;
+    projectName.textContent = payload.project.name || 'Proposal draft';
     const projectMeta = document.createElement('p');
-    projectMeta.textContent = [payload.project.siteAddress, payload.recipient.fullName, payload.recipient.company].filter(Boolean).join(' • ');
-    cover.append(logo, projectName, projectMeta);
-
-    const content = document.createElement('div');
-    content.className = 'proposal-content';
-    appendPreviewBlock(content, 'Proposal summary', payload.proposal.summary);
-    appendPreviewBlock(content, 'Client objectives', payload.intake.clientObjectives);
-    appendPreviewBlock(content, 'Client constraints', payload.intake.clientConstraints);
-    appendPreviewBlock(content, 'Scope of work', payload.proposal.scope);
-    appendPreviewBlock(content, 'Estimate organization', `By ${payload.proposal.estimateGrouping}`);
-    appendPreviewBlock(content, 'Client-visible specifications', payload.proposal.specifications);
-    appendMaterialPricingTable(content, payload.proposal.materialLineItems);
-    appendPreviewBlock(content, 'Labour pricing', payload.proposal.labour);
-    appendPreviewBlock(content, 'Allowances', payload.proposal.allowances);
-    appendPreviewBlock(content, 'Quote-pending items', payload.proposal.quotePending);
-    appendPreviewBlock(content, 'Pricing summary', payload.proposal.pricing);
-    appendPreviewBlock(content, 'Proposal total', payload.proposal.total);
-    appendPreviewBlock(content, 'Assumptions', payload.proposal.assumptions);
-    appendPreviewBlock(content, 'Exclusions', payload.proposal.exclusions);
-    appendPreviewBlock(content, 'Options', payload.proposal.options);
+    projectMeta.textContent = [
+      record.proposalId ? `Proposal ID: ${record.proposalId}` : '',
+      record.proposalStatus || 'Draft created',
+    ].filter(Boolean).join(' • ');
+    const actions = document.createElement('div');
+    actions.className = 'actions';
 
     const reviewUrl = safeHttpUrl(record.reviewUrl || '');
     if (reviewUrl) {
-      const linkWrap = document.createElement('div');
-      linkWrap.className = 'proposal-block';
       const link = document.createElement('a');
       link.className = 'button-link';
       link.href = reviewUrl;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.textContent = 'Open exact Better Proposals draft';
-      linkWrap.appendChild(link);
-      content.appendChild(linkWrap);
+      link.textContent = 'Open draft in Better Proposals';
+      actions.appendChild(link);
     }
 
-    paper.append(cover, content);
-    preview.append(note, paper);
+    const exactPreviewUrl = safeHttpUrl(record.previewUrl || '');
+    if (exactPreviewUrl && exactPreviewUrl !== reviewUrl) {
+      const link = document.createElement('a');
+      link.className = 'button-link secondary';
+      link.href = exactPreviewUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'View exact rendered preview';
+      actions.appendChild(link);
+    }
+
+    if (!actions.children.length) {
+      const link = document.createElement('a');
+      link.className = 'button-link';
+      link.href = 'https://betterproposals.io/2/proposals/';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'Open Better Proposals documents';
+      actions.appendChild(link);
+    }
+
+    card.append(eyebrow, projectName, projectMeta, actions);
+    preview.append(note, card);
+    if (exactPreviewUrl) {
+      const frame = document.createElement('iframe');
+      frame.className = 'better-proposals-exact-preview';
+      frame.src = exactPreviewUrl;
+      frame.title = `Better Proposals rendered preview for ${payload.project.name || 'proposal draft'}`;
+      frame.loading = 'eager';
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
+      frame.setAttribute('sandbox', 'allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts');
+      preview.appendChild(frame);
+    }
     preview.className = 'proposal-preview show';
   }
 
@@ -1797,12 +1765,15 @@
       });
       latestDraft = data;
       const record = data.draft || {};
-      const proposalId = record.proposalId || (record.apiResponse && record.apiResponse.data && (record.apiResponse.data.ProposalID || record.apiResponse.data.id)) || '';
+      const apiData = record.apiResponse && (record.apiResponse.data || record.apiResponse) || {};
+      const statusData = record.statusResponse && (record.statusResponse.data || record.statusResponse) || {};
+      const proposalId = record.proposalId || apiData.ProposalID || apiData.id || '';
       const proposalStatus = record.proposalStatus || 'Created; confirm draft status in Better Proposals';
-      const proposalUrl = record.reviewUrl || (record.apiResponse && record.apiResponse.data && (record.apiResponse.data.PreviewURL || record.apiResponse.data.url)) || '';
+      const proposalUrl = safeHttpUrl(record.reviewUrl || statusData.ProposalView || apiData.ProposalView || statusData.PreviewURL || apiData.PreviewURL || statusData.url || apiData.url || '');
+      const exactPreviewUrl = safeHttpUrl(record.previewUrl || statusData.Preview || apiData.Preview || statusData.PreviewURL || apiData.PreviewURL || '');
       $('proposalId').value = proposalId;
       $('proposalUrl').value = proposalUrl;
-      renderProposalPreview(payload, { ...record, reviewUrl: proposalUrl });
+      renderProposalPreview(payload, { ...record, proposalId, proposalStatus, reviewUrl: proposalUrl, previewUrl: exactPreviewUrl });
       $('markApprovedButton').disabled = false;
       $('markChangesButton').disabled = false;
       loadReviewDecision();
@@ -1812,6 +1783,7 @@
         `<p><strong>Proposal ID:</strong> <span class="small-code">${proposalId || 'Not returned'}</span></p>`,
         `<p><strong>Status:</strong> ${proposalStatus}</p>`,
         `<p><strong>Review link:</strong> ${proposalUrl ? `<a href="${proposalUrl}" target="_blank" rel="noopener noreferrer">Open draft for review</a>` : 'Not returned by the API; open the draft from Documents in Better Proposals.'}</p>`,
+        exactPreviewUrl && exactPreviewUrl !== proposalUrl ? `<p><strong>Rendered preview:</strong> <a href="${exactPreviewUrl}" target="_blank" rel="noopener noreferrer">View the exact proposal preview</a></p>` : '',
         `<p><strong>Next:</strong> ${data.nextAction}</p>`,
         `<p><strong>Idempotency key:</strong> <span class="small-code">${data.idempotencyKey}</span></p>`,
         '<button type="button" id="showDraftRaw">View full response</button>'

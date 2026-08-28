@@ -94,6 +94,8 @@ async function main() {
     assert(first.response.ok, `Draft creation failed: ${first.data.message || 'unknown error'}`);
     assert(first.data.duplicatePrevented === false, 'First draft should not be marked duplicate.');
     assert(first.data.draft.safety.sendEndpointExposedByThisPOC === false, 'Draft safety flag is incorrect.');
+    assert(first.data.draft.reviewUrl === 'https://betterproposals.io/mock-preview-not-live', 'Draft review URL was not normalized.');
+    assert(first.data.draft.previewUrl === 'https://betterproposals.io/mock-preview-not-live', 'Rendered preview URL was not returned separately.');
 
     const incompleteEstimate = JSON.parse(JSON.stringify(sample));
     incompleteEstimate.intakeId = `VST-BP-TEST-INCOMPLETE-${Date.now()}`;

@@ -55,6 +55,7 @@ Even with Manager Approvals, Better Proposals' documented flow requires an autho
 - `VISTURE_TEMPLATE_TAG_PLACEMENT.md` - section-by-section reference for recreating the layout in Better Proposals.
 - `TEST_SCRIPT.md` - acceptance-test steps for JG and the entered test recipient.
 - `LOCAL_ESTIMATOR_AGENT.md` - request and response contract for filling Section 3 from a Mac Studio estimator agent.
+- `local-agent/server.mjs` - local Ollama adapter for generating and validating Section 3 (`npm run start:local-agent`).
 - `INVESTIGATION_BRIEF_ALIGNMENT.md` - requirement-by-requirement POC coverage, gaps, and next implementation gates.
 - `sample-create-draft-request.json` - sample payload shape.
 - `test.js` - automated mock-mode safety test.

@@ -519,8 +519,14 @@ async function createDraft(body) {
   const proposalStatus = findValueDeep(statusData, /^(proposal_?status|document_?status|status)$/i)
     || findValueDeep(rawData, /^(proposal_?status|document_?status|status)$/i)
     || 'Created; confirm draft status in Better Proposals';
-  const reviewUrl = findValueDeep(statusData, /^(preview_?url|proposal_?url|document_?url|review_?url|url|link)$/i)
-    || findValueDeep(rawData, /^(preview_?url|proposal_?url|document_?url|review_?url|url|link)$/i);
+  const proposalViewUrl = findValueDeep(statusData, /^proposal_?view$/i)
+    || findValueDeep(rawData, /^proposal_?view$/i);
+  const previewUrl = findValueDeep(statusData, /^(preview|preview_?url)$/i)
+    || findValueDeep(rawData, /^(preview|preview_?url)$/i);
+  const reviewUrl = proposalViewUrl
+    || findValueDeep(statusData, /^(proposal_?url|document_?url|review_?url|url|link)$/i)
+    || findValueDeep(rawData, /^(proposal_?url|document_?url|review_?url|url|link)$/i)
+    || previewUrl;
   const record = {
     createdAt: new Date().toISOString(),
     mode: MODE,
@@ -529,6 +535,7 @@ async function createDraft(body) {
     proposalId,
     proposalStatus,
     reviewUrl,
+    previewUrl,
     apiResponse,
     statusResponse,
     statusLookupError,
