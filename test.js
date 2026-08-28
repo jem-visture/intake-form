@@ -62,6 +62,8 @@ async function main() {
     assert(Array.isArray(discover.data.templates) && discover.data.templates.length > 0, 'Mock templates were not returned.');
 
     const sample = JSON.parse(fs.readFileSync(path.join(ROOT, 'sample-create-draft-request.json'), 'utf8'));
+    const materialSubtotal = sample.proposal.materialLineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+    assert(materialSubtotal === 152500, 'Dummy material line items should total CAD 152,500.');
     sample.betterProposals.templateId = 'MOCK-TEMPLATE-01';
     sample.intakeId = `VST-BP-TEST-${Date.now()}`;
 
@@ -76,13 +78,23 @@ async function main() {
 
     const incompleteEstimate = JSON.parse(JSON.stringify(sample));
     incompleteEstimate.intakeId = `VST-BP-TEST-INCOMPLETE-${Date.now()}`;
-    incompleteEstimate.proposal.materials = '';
+    incompleteEstimate.proposal.materialLineItems = [];
     const rejectedEstimate = await request('/api/bp/create-draft', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(incompleteEstimate),
     });
     assert(rejectedEstimate.response.status === 400, 'Missing material pricing should block draft creation.');
+
+    const invalidQuantity = JSON.parse(JSON.stringify(sample));
+    invalidQuantity.intakeId = `VST-BP-TEST-QUANTITY-${Date.now()}`;
+    invalidQuantity.proposal.materialLineItems[0].quantity = 0;
+    const rejectedQuantity = await request('/api/bp/create-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(invalidQuantity),
+    });
+    assert(rejectedQuantity.response.status === 400, 'A zero material quantity should block draft creation.');
 
     const second = await request('/api/bp/create-draft', {
       method: 'POST',

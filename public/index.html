@@ -193,6 +193,7 @@
     @media (max-width: 720px) { .g2, .g3 { grid-template-columns: 1fr; } }
 
     .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .span-2 { grid-column: 1 / -1; }
     .field-label-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; }
     label, .label { font-weight: 500; font-size: 12px; letter-spacing: 0.025em; }
     .hint { color: var(--muted); font-size: 11.5px; }
@@ -285,6 +286,27 @@
     .field-label-row .mic-button svg { width: 15px; height: 15px; fill: currentColor; }
     .field-label-row .mic-button.recording { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 0 0 4px rgba(230,94,50,.14); }
 
+    .line-items-panel { border: 1px solid var(--line); background: #fafaf8; padding: 12px; }
+    .line-items-head, .line-item-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 1fr) minmax(180px, 1.7fr) 78px 92px 112px 118px 34px;
+      gap: 8px;
+      align-items: center;
+    }
+    .line-items-head { padding: 0 4px 7px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+    .line-item-row { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--line); }
+    .line-item-row input, .line-item-row select { min-width: 0; padding: 9px 8px; background: #fff; }
+    .line-item-total { text-align: right; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .remove-line-item { width: 30px; height: 30px; padding: 0; border-radius: 50%; color: var(--muted); }
+    .line-items-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--charcoal); }
+    .line-items-subtotal { font-size: 16px; font-weight: 700; }
+
+    .preview-pricing-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+    .preview-pricing-table th, .preview-pricing-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .preview-pricing-table th { color: var(--muted); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+    .preview-pricing-table .numeric { text-align: right; white-space: nowrap; }
+    .preview-pricing-total { margin-top: 10px; text-align: right; font-weight: 700; }
+
     .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
     .form-start-actions {
@@ -307,6 +329,10 @@
       .form-start-actions { align-items: stretch; flex-direction: column; }
       .section-head { align-items: flex-start; flex-wrap: wrap; }
       .section-note { width: 100%; margin-left: 40px; }
+      .line-items-head { display: none; }
+      .line-item-row { grid-template-columns: 1fr 1fr; padding: 12px 0; }
+      .line-item-row .line-item-name { grid-column: 1 / -1; }
+      .line-item-row .line-item-total { text-align: left; }
     }
 
     .checklist { display: grid; gap: 8px; }
@@ -526,7 +552,18 @@
           <div class="field"><label>Scope of work <span class="required">*</span></label><textarea id="scopeOfWork" class="tall"></textarea></div>
           <div class="field"><label>Estimate organization <span class="required">*</span></label><select id="estimateGrouping"><option value="room">By room</option><option value="trade">By trade</option><option value="phase">By phase</option><option value="apartment">By apartment</option></select></div>
           <div class="field"><label>Client-visible specifications</label><textarea id="clientSpecifications" placeholder="Finishes, systems, performance requirements, and value-defining details."></textarea></div>
-          <div class="field"><label>Material pricing <span class="required">*</span></label><textarea id="materialPricing" class="tall" placeholder="Material quantities, unit pricing, and subtotals."></textarea></div>
+          <div class="field span-2">
+            <label>Material line items <span class="required">*</span></label>
+            <span class="hint">Add the area, material, quantity, unit, and unit price. Totals are calculated automatically in CAD and retained as structured proposal data.</span>
+            <div class="line-items-panel">
+              <div class="line-items-head" aria-hidden="true"><span>Area / phase</span><span>Material or item</span><span>Quantity</span><span>Unit</span><span>Unit price</span><span>Total</span><span></span></div>
+              <div id="materialLineItems"></div>
+              <div class="line-items-footer">
+                <button id="addMaterialItem" type="button">Add material item</button>
+                <div class="line-items-subtotal">Materials subtotal: <span id="materialSubtotal">CAD $0.00</span></div>
+              </div>
+            </div>
+          </div>
           <div class="field"><label>Labour pricing <span class="required">*</span></label><textarea id="labourPricing" class="tall" placeholder="Labour hours, rates, and subtotals."></textarea></div>
           <div class="field"><label>Allowances</label><textarea id="allowances" placeholder="Selection allowances and included amounts."></textarea></div>
           <div class="field"><label>Quote-pending items</label><textarea id="quotePendingItems" placeholder="Trade or supplier quotations still required."></textarea></div>
@@ -799,6 +836,82 @@
 
   function value(id) { return $(id).value.trim(); }
 
+  const cad = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' });
+
+  function cleanMoney(valueToClean) {
+    const amount = Number(valueToClean);
+    return Number.isFinite(amount) && amount >= 0 ? Math.round(amount * 100) / 100 : 0;
+  }
+
+  function readMaterialLineItems() {
+    return Array.from(document.querySelectorAll('#materialLineItems .line-item-row')).map((row) => {
+      const quantity = cleanMoney(row.querySelector('.line-item-quantity').value);
+      const unitPrice = cleanMoney(row.querySelector('.line-item-price').value);
+      return {
+        area: row.querySelector('.line-item-area').value.trim(),
+        name: row.querySelector('.line-item-name').value.trim(),
+        quantity,
+        unit: row.querySelector('.line-item-unit').value,
+        unitPrice,
+        total: Math.round(quantity * unitPrice * 100) / 100,
+      };
+    }).filter((item) => item.area || item.name || item.quantity || item.unitPrice);
+  }
+
+  function formatMaterialLineItems(items) {
+    const lines = items.map((item) => `${item.area || 'General'} — ${item.name}: ${item.quantity} ${item.unit} × ${cad.format(item.unitPrice)} = ${cad.format(item.total)}`);
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    if (lines.length) lines.push(`MATERIALS SUBTOTAL: ${cad.format(subtotal)}`);
+    return lines.join('\n');
+  }
+
+  function updateMaterialTotals() {
+    document.querySelectorAll('#materialLineItems .line-item-row').forEach((row) => {
+      const quantity = cleanMoney(row.querySelector('.line-item-quantity').value);
+      const price = cleanMoney(row.querySelector('.line-item-price').value);
+      row.querySelector('.line-item-total').textContent = cad.format(quantity * price);
+    });
+    const subtotal = readMaterialLineItems().reduce((sum, item) => sum + item.total, 0);
+    $('materialSubtotal').textContent = cad.format(subtotal);
+  }
+
+  function addMaterialLineItem(item = {}) {
+    const row = document.createElement('div');
+    row.className = 'line-item-row';
+    row.innerHTML = [
+      '<input class="line-item-area" aria-label="Area or phase" placeholder="Kitchen">',
+      '<input class="line-item-name" aria-label="Material or item" placeholder="Quartz countertop">',
+      '<input class="line-item-quantity" aria-label="Quantity" type="number" min="0" step="0.01" value="1">',
+      '<select class="line-item-unit" aria-label="Unit"><option value="each">each</option><option value="sq ft">sq ft</option><option value="linear ft">linear ft</option><option value="allowance">allowance</option><option value="lump sum">lump sum</option></select>',
+      '<input class="line-item-price" aria-label="Unit price in Canadian dollars" type="number" min="0" step="0.01" value="0">',
+      '<output class="line-item-total" aria-label="Calculated line total">CAD $0.00</output>',
+      '<button class="remove-line-item" type="button" aria-label="Remove material item" title="Remove item">×</button>',
+    ].join('');
+    row.querySelector('.line-item-area').value = item.area || '';
+    row.querySelector('.line-item-name').value = item.name || '';
+    row.querySelector('.line-item-quantity').value = item.quantity ?? 1;
+    row.querySelector('.line-item-unit').value = item.unit || 'each';
+    row.querySelector('.line-item-price').value = item.unitPrice ?? 0;
+    row.querySelectorAll('input, select').forEach((control) => control.addEventListener('input', updateMaterialTotals));
+    row.querySelector('.remove-line-item').addEventListener('click', () => {
+      row.remove();
+      if (!$('materialLineItems').children.length) addMaterialLineItem();
+      updateMaterialTotals();
+    });
+    $('materialLineItems').appendChild(row);
+    updateMaterialTotals();
+  }
+
+  function setMaterialLineItems(items) {
+    $('materialLineItems').textContent = '';
+    items.forEach(addMaterialLineItem);
+    if (!items.length) addMaterialLineItem();
+    updateMaterialTotals();
+  }
+
+  $('addMaterialItem').addEventListener('click', () => addMaterialLineItem());
+  addMaterialLineItem();
+
   function updateRecipientStatus() {
     const email = value('recipientEmail').toLowerCase();
     statusClass($('recipientStatus'), email ? 'good' : 'warn', email || 'Not set');
@@ -808,6 +921,7 @@
   updateRecipientStatus();
 
   function intakePayload() {
+    const materialLineItems = readMaterialLineItems();
     return {
       intakeId: value('intakeId'),
       revision: value('revision') || '1',
@@ -836,7 +950,9 @@
         scope: value('scopeOfWork'),
         estimateGrouping: value('estimateGrouping'),
         specifications: value('clientSpecifications'),
-        materials: value('materialPricing'),
+        materialLineItems,
+        materials: formatMaterialLineItems(materialLineItems),
+        materialsSubtotal: Math.round(materialLineItems.reduce((sum, item) => sum + item.total, 0) * 100) / 100,
         labour: value('labourPricing'),
         allowances: value('allowances'),
         quotePending: value('quotePendingItems'),
@@ -877,7 +993,11 @@
     if (!payload.proposal.summary) missing.push('Proposal summary');
     if (!payload.proposal.scope) missing.push('Scope of work');
     if (!payload.proposal.estimateGrouping) missing.push('Estimate organization');
-    if (!payload.proposal.materials) missing.push('Material pricing');
+    if (!payload.proposal.materialLineItems.length) missing.push('At least one material line item');
+    payload.proposal.materialLineItems.forEach((item, index) => {
+      if (!item.name) missing.push(`Material item ${index + 1} name`);
+      if (!(item.quantity > 0)) missing.push(`Material item ${index + 1} quantity`);
+    });
     if (!payload.proposal.labour) missing.push('Labour pricing');
     if (!payload.proposal.pricing) missing.push('Pricing summary');
     if (!payload.betterProposals.templateId) missing.push('Better Proposals template ID');
@@ -912,12 +1032,20 @@
     ].join('\n');
     $('estimateGrouping').value = 'room';
     $('clientSpecifications').value = 'Kitchen: custom full-height cabinetry, quartz surfaces, LED task lighting, and durable wide-plank flooring. Primary bathroom: low-threshold shower, porcelain tile, waterproofing system, upgraded ventilation, and coordinated matte-black fixtures. All specifications are fictional and subject to selections.';
-    $('materialPricing').value = [
-      'Kitchen cabinetry, counters, fixtures, and finishes: CAD 82,000',
-      'Bathroom fixtures, tile, glass, and finishes: CAD 39,500',
-      'Flooring, trim, protection, and consumables: CAD 31,000',
-      'TEST MATERIAL SUBTOTAL: CAD 152,500'
-    ].join('\n');
+    setMaterialLineItems([
+      { area: 'Kitchen', name: 'Custom kitchen cabinetry', quantity: 1, unit: 'lump sum', unitPrice: 58000 },
+      { area: 'Kitchen', name: 'Quartz countertops', quantity: 52, unit: 'sq ft', unitPrice: 165 },
+      { area: 'Main living areas', name: 'Engineered hardwood flooring', quantity: 1270, unit: 'sq ft', unitPrice: 14.50 },
+      { area: 'Primary bathroom', name: 'Porcelain wall and floor tile', quantity: 420, unit: 'sq ft', unitPrice: 12 },
+      { area: 'Primary bathroom', name: 'Plumbing fixtures', quantity: 1, unit: 'allowance', unitPrice: 9000 },
+      { area: 'Primary bathroom', name: 'Custom shower glass', quantity: 1, unit: 'each', unitPrice: 4200 },
+      { area: 'Throughout', name: 'Decorative lighting fixtures', quantity: 1, unit: 'allowance', unitPrice: 6000 },
+      { area: 'Throughout', name: 'Doors, trim, paint, and finishing materials', quantity: 1, unit: 'lump sum', unitPrice: 9350 },
+      { area: 'Kitchen and bathroom', name: 'Electrical and plumbing rough-in materials', quantity: 1, unit: 'lump sum', unitPrice: 8900 },
+      { area: 'Primary bathroom', name: 'Waterproofing and setting materials', quantity: 1, unit: 'lump sum', unitPrice: 4800 },
+      { area: 'Site logistics', name: 'Protection, disposal, and consumables', quantity: 1, unit: 'lump sum', unitPrice: 7400 },
+      { area: 'Selections', name: 'Material escalation and selection allowance', quantity: 1, unit: 'allowance', unitPrice: 12815 },
+    ]);
     $('labourPricing').value = [
       'Site supervision, protection, demolition, and cleanup: CAD 29,500',
       'Carpentry, cabinetry installation, and finishing: CAD 35,000',
@@ -972,6 +1100,35 @@
     container.appendChild(block);
   }
 
+  function appendMaterialPricingTable(container, items) {
+    if (!Array.isArray(items) || !items.length) return;
+    const block = document.createElement('div');
+    block.className = 'proposal-block';
+    const heading = document.createElement('h4');
+    heading.textContent = 'Itemized material pricing';
+    const table = document.createElement('table');
+    table.className = 'preview-pricing-table';
+    const head = document.createElement('thead');
+    head.innerHTML = '<tr><th>Area</th><th>Material or item</th><th class="numeric">Qty</th><th>Unit</th><th class="numeric">Unit price</th><th class="numeric">Total</th></tr>';
+    const body = document.createElement('tbody');
+    items.forEach((item) => {
+      const row = document.createElement('tr');
+      [item.area || 'General', item.name, item.quantity, item.unit, cad.format(item.unitPrice), cad.format(item.total)].forEach((content, index) => {
+        const cell = document.createElement('td');
+        cell.textContent = content;
+        if (index === 2 || index >= 4) cell.className = 'numeric';
+        row.appendChild(cell);
+      });
+      body.appendChild(row);
+    });
+    table.append(head, body);
+    const total = document.createElement('div');
+    total.className = 'preview-pricing-total';
+    total.textContent = `Materials subtotal: ${cad.format(items.reduce((sum, item) => sum + item.total, 0))}`;
+    block.append(heading, table, total);
+    container.appendChild(block);
+  }
+
   function safeHttpUrl(candidate) {
     try {
       const url = new URL(candidate);
@@ -1010,7 +1167,7 @@
     appendPreviewBlock(content, 'Scope of work', payload.proposal.scope);
     appendPreviewBlock(content, 'Estimate organization', `By ${payload.proposal.estimateGrouping}`);
     appendPreviewBlock(content, 'Client-visible specifications', payload.proposal.specifications);
-    appendPreviewBlock(content, 'Material pricing', payload.proposal.materials);
+    appendMaterialPricingTable(content, payload.proposal.materialLineItems);
     appendPreviewBlock(content, 'Labour pricing', payload.proposal.labour);
     appendPreviewBlock(content, 'Allowances', payload.proposal.allowances);
     appendPreviewBlock(content, 'Quote-pending items', payload.proposal.quotePending);
@@ -1157,7 +1314,7 @@
       if (Array.isArray(data.documentTypes)) setOptions($('documentType'), data.documentTypes, '', true);
       if (Array.isArray(data.currencies)) setOptions($('currency'), data.currencies, '', true, currencyCode);
       if (Array.isArray(data.brands)) setOptions($('brandId'), data.brands, 'Default brand', false);
-      const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','estimate_grouping','client_specifications','material_pricing','labour_pricing','allowances','quote_pending_items','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
+      const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','estimate_grouping','client_specifications','material_pricing','material_subtotal','labour_pricing','allowances','quote_pending_items','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
       const accountTags = Array.isArray(data.mergeTags) ? data.mergeTags.map((item) => mergeTagName(item, recordName(item, ''))) : [];
       const missingTags = requiredTags.filter((tag) => !accountTags.includes(tag));
       const coreListsReady = Array.isArray(data.templates) && data.templates.length > 0

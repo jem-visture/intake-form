@@ -21,6 +21,8 @@ Pass condition: the Visture template and required account settings can be select
 ## Test 2: Draft creation
 
 - [ ] Select `Fill form with dummy data` and confirm all required intake and proposal content is populated.
+- [ ] Confirm the dummy material rows show plausible quantities, unit prices, line totals, and a CAD 152,500 material subtotal.
+- [ ] Add, edit, and remove a material row; confirm its line total and subtotal recalculate immediately.
 - [ ] Select the Visture template and settings.
 - [ ] Confirm the entered test recipient email is correct.
 - [ ] Check all three release confirmations.
@@ -46,6 +48,7 @@ Pass condition: exactly one unsent Better Proposals draft exists for the test re
 - [ ] Confirm the selected estimate organization is shown.
 - [ ] Confirm client-visible specifications are clear and persuasive.
 - [ ] Confirm material and labour pricing appear separately.
+- [ ] Confirm every material description, quantity, unit, unit price, line total, and subtotal matches the intake form.
 - [ ] Confirm allowances and quote-pending items are clearly identified.
 - [ ] Confirm pricing and total.
 - [ ] Confirm assumptions, exclusions, and options.

@@ -27,6 +27,7 @@
 | Estimate heading | `{{estimate_grouping}}` | Room, trade, phase, or apartment grouping |
 | Specifications section | `{{client_specifications}}` | Client-visible finishes and performance details |
 | Detailed pricing | `{{material_pricing}}` | Approved material quantities and pricing |
+| Detailed pricing total | `{{material_subtotal}}` | Server-calculated material subtotal |
 | Detailed pricing | `{{labour_pricing}}` | Approved labour hours, rates, and pricing |
 | Commercial section | `{{allowances}}` | Approved selection allowances |
 | Commercial section | `{{quote_pending_items}}` | Trade or supplier quotes still required |
@@ -43,7 +44,9 @@ Recipient name and email should be sent through the Better Proposals `Contacts` 
 
 ## Phase-one pricing design
 
-Use the structured multiline tags `{{material_pricing}}`, `{{labour_pricing}}`, `{{allowances}}`, `{{quote_pending_items}}`, and `{{pricing_summary}}` for the initial connection test. This proves that the approved estimate categories can reach the proposal without depending on undocumented dynamic pricing-table behavior.
+The intake form stores each material as a structured row containing area, item name, quantity, unit, unit price, and calculated total. The server validates and recalculates every row rather than trusting browser totals.
+
+Use `{{material_pricing}}` for the generated multiline itemization and `{{material_subtotal}}` for its calculated total. Use `{{labour_pricing}}`, `{{allowances}}`, `{{quote_pending_items}}`, and `{{pricing_summary}}` for the other initial connection-test sections. This proves that the approved estimate categories can reach the proposal without depending on undocumented dynamic pricing-table behavior.
 
 After that works, test whether Better Proposals can reliably support:
 

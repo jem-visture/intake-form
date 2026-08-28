@@ -33,6 +33,7 @@ Create these under `Settings > Setup > Custom Merge Tags` and place them in the 
 - [ ] `estimate_grouping`
 - [ ] `client_specifications`
 - [ ] `material_pricing`
+- [ ] `material_subtotal`
 - [ ] `labour_pricing`
 - [ ] `allowances`
 - [ ] `quote_pending_items`

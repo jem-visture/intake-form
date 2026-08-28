@@ -176,6 +176,45 @@ function cleanEmail(value) {
   return email;
 }
 
+const MATERIAL_UNITS = new Set(['each', 'sq ft', 'linear ft', 'allowance', 'lump sum']);
+
+function normalizeMaterialLineItems(value) {
+  if (!Array.isArray(value) || value.length === 0) throw new Error('At least one material line item is required.');
+  if (value.length > 50) throw new Error('Material line items cannot exceed 50 rows.');
+  return value.map((item, index) => {
+    const row = item && typeof item === 'object' ? item : {};
+    const area = String(row.area || '').trim().slice(0, 120);
+    const name = requiredString(row.name, `Material line item ${index + 1} name`).slice(0, 200);
+    const quantity = Number(row.quantity);
+    const unitPrice = Number(row.unitPrice);
+    const unit = String(row.unit || '').trim();
+    if (!Number.isFinite(quantity) || quantity <= 0) throw new Error(`Material line item ${index + 1} quantity must be greater than zero.`);
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) throw new Error(`Material line item ${index + 1} unit price must be zero or greater.`);
+    if (!MATERIAL_UNITS.has(unit)) throw new Error(`Material line item ${index + 1} unit is unsupported.`);
+    const cleanQuantity = Math.round(quantity * 100) / 100;
+    const cleanUnitPrice = Math.round(unitPrice * 100) / 100;
+    return {
+      area,
+      name,
+      quantity: cleanQuantity,
+      unit,
+      unitPrice: cleanUnitPrice,
+      total: Math.round(cleanQuantity * cleanUnitPrice * 100) / 100,
+    };
+  });
+}
+
+function cad(value) {
+  return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(value);
+}
+
+function materialPricingText(items) {
+  const lines = items.map((item) => `${item.area || 'General'} — ${item.name}: ${item.quantity} ${item.unit} × ${cad(item.unitPrice)} = ${cad(item.total)}`);
+  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  lines.push(`MATERIALS SUBTOTAL: ${cad(subtotal)}`);
+  return lines.join('\n');
+}
+
 function addIfPresent(form, key, value) {
   if (value !== undefined && value !== null && String(value).trim() !== '') {
     form.append(key, String(value));
@@ -198,6 +237,8 @@ function buildMergeTags(body) {
   const project = body.project || {};
   const intake = body.intake || {};
   const proposal = body.proposal || {};
+  const materialLineItems = normalizeMaterialLineItems(proposal.materialLineItems);
+  const materialSubtotal = materialLineItems.reduce((sum, item) => sum + item.total, 0);
   const mapping = {
     project_name: project.name,
     site_address: project.siteAddress,
@@ -207,7 +248,8 @@ function buildMergeTags(body) {
     scope_of_work: proposal.scope,
     estimate_grouping: proposal.estimateGrouping,
     client_specifications: proposal.specifications,
-    material_pricing: proposal.materials,
+    material_pricing: materialPricingText(materialLineItems),
+    material_subtotal: cad(materialSubtotal),
     labour_pricing: proposal.labour,
     allowances: proposal.allowances,
     quote_pending_items: proposal.quotePending,
@@ -272,7 +314,7 @@ function validateCreateRequest(body) {
   requiredString(body.project && body.project.name, 'Project name');
   requiredString(body.proposal && body.proposal.scope, 'Proposal scope');
   requiredString(body.proposal && body.proposal.estimateGrouping, 'Estimate organization');
-  requiredString(body.proposal && body.proposal.materials, 'Material pricing');
+  normalizeMaterialLineItems(body.proposal && body.proposal.materialLineItems);
   requiredString(body.proposal && body.proposal.labour, 'Labour pricing');
   requiredString(body.proposal && body.proposal.pricing, 'Pricing summary');
   requiredString(body.betterProposals && body.betterProposals.templateId, 'Better Proposals template ID');
@@ -290,7 +332,7 @@ async function discoverBetterProposals() {
       mergeTags: [
         'project_name', 'site_address', 'client_objectives', 'client_constraints',
         'proposal_summary', 'scope_of_work', 'estimate_grouping', 'client_specifications',
-        'material_pricing', 'labour_pricing', 'allowances', 'quote_pending_items',
+        'material_pricing', 'material_subtotal', 'labour_pricing', 'allowances', 'quote_pending_items',
         'pricing_summary', 'assumptions', 'exclusions', 'options', 'proposal_total',
         'intake_reference',
       ].map((tag) => ({ tag, name: tag })),
