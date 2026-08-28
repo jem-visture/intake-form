@@ -417,7 +417,7 @@ async function discoverBetterProposals() {
     currencies: '/currency/',
     settings: '/settings/',
     brands: '/settings/brand/',
-    mergeTags: '/settings/merge_tag/',
+    mergeTags: '/settings/merge_tag/?per_page=100',
   };
   const entries = await Promise.all(Object.entries(endpoints).map(async ([key, endpoint]) => {
     try {

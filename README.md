@@ -34,6 +34,8 @@ For that reason, this POC follows a safe and supportable boundary:
 
 This boundary also satisfies the brief's requirement that no proposal be sent without human approval.
 
+Account discovery requests up to 100 custom merge tags because the Better Proposals endpoint otherwise returns only its first 10 records.
+
 ## Better Proposals plan requirement
 
 - Premium: API/Zapier and custom merge tags. This is enough to create the draft, but JG review is a manual operating step.
