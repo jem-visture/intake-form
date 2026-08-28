@@ -300,6 +300,11 @@
     .remove-line-item { width: 30px; height: 30px; padding: 0; border-radius: 50%; color: var(--muted); }
     .line-items-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--charcoal); }
     .line-items-subtotal { font-size: 16px; font-weight: 700; }
+    .estimate-totals { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); background: var(--charcoal); color: #fff; }
+    .estimate-total { padding: 14px; border-right: 1px solid rgba(255,255,255,.18); }
+    .estimate-total:last-child { border-right: 0; }
+    .estimate-total span { display: block; color: rgba(255,255,255,.68); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+    .estimate-total strong { display: block; margin-top: 4px; font-size: 18px; }
 
     .preview-pricing-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
     .preview-pricing-table th, .preview-pricing-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
@@ -333,6 +338,9 @@
       .line-item-row { grid-template-columns: 1fr 1fr; padding: 12px 0; }
       .line-item-row .line-item-name { grid-column: 1 / -1; }
       .line-item-row .line-item-total { text-align: left; }
+      .estimate-totals { grid-template-columns: 1fr; }
+      .estimate-total { border-right: 0; border-bottom: 1px solid rgba(255,255,255,.18); }
+      .estimate-total:last-child { border-bottom: 0; }
     }
 
     .checklist { display: grid; gap: 8px; }
@@ -564,10 +572,16 @@
               </div>
             </div>
           </div>
-          <div class="field"><label>Labour pricing <span class="required">*</span></label><textarea id="labourPricing" class="tall" placeholder="Labour hours, rates, and subtotals."></textarea></div>
+          <div class="field"><label>Estimated total labour hours <span class="required">*</span></label><input id="laborHours" type="number" min="0.5" step="0.5" placeholder="1700"></div>
+          <div class="field"><label>Labour rate per hour <span class="required">*</span></label><input id="laborHourlyRate" type="number" min="0.01" step="0.01" value="75"><span class="hint">Pre-filled at CAD 75/hour and adjustable for testing.</span></div>
+          <div class="estimate-totals" aria-live="polite">
+            <div class="estimate-total"><span>Materials subtotal</span><strong id="estimateMaterialsTotal">CAD $0.00</strong></div>
+            <div class="estimate-total"><span>Labour total</span><strong id="estimateLaborTotal">CAD $0.00</strong></div>
+            <div class="estimate-total"><span>Materials + labour</span><strong id="estimateCombinedTotal">CAD $0.00</strong></div>
+          </div>
           <div class="field"><label>Allowances</label><textarea id="allowances" placeholder="Selection allowances and included amounts."></textarea></div>
           <div class="field"><label>Quote-pending items</label><textarea id="quotePendingItems" placeholder="Trade or supplier quotations still required."></textarea></div>
-          <div class="field"><label>Pricing summary <span class="required">*</span></label><textarea id="pricingSummary" class="tall"></textarea></div>
+          <div class="field"><label>Additional pricing notes</label><textarea id="pricingSummary" class="tall" placeholder="Add allowances, pending quotes, overhead, contingency, or other commercial notes. Calculated material and labour totals are appended automatically."></textarea></div>
           <div class="field"><label>Proposal total</label><input id="proposalTotal" placeholder="CAD 125,000 before GST"></div>
           <div class="field"><label>Assumptions</label><textarea id="assumptions"></textarea></div>
           <div class="field"><label>Exclusions</label><textarea id="exclusions"></textarea></div>
@@ -865,6 +879,33 @@
     return lines.join('\n');
   }
 
+  function readLaborEstimate() {
+    const hours = cleanMoney($('laborHours').value);
+    const hourlyRate = cleanMoney($('laborHourlyRate').value);
+    return { hours, hourlyRate, total: Math.round(hours * hourlyRate * 100) / 100 };
+  }
+
+  function formatLaborEstimate(labor) {
+    return `${labor.hours} estimated hours × ${cad.format(labor.hourlyRate)}/hour = ${cad.format(labor.total)}`;
+  }
+
+  function formatPricingSummary(notes, materialSubtotal, labor) {
+    return [
+      `Materials subtotal: ${cad.format(materialSubtotal)}`,
+      `Labour: ${formatLaborEstimate(labor)}`,
+      `MATERIALS + LABOUR SUBTOTAL: ${cad.format(materialSubtotal + labor.total)}`,
+      notes,
+    ].filter(Boolean).join('\n');
+  }
+
+  function updateEstimateTotals() {
+    const materialSubtotal = readMaterialLineItems().reduce((sum, item) => sum + item.total, 0);
+    const labor = readLaborEstimate();
+    $('estimateMaterialsTotal').textContent = cad.format(materialSubtotal);
+    $('estimateLaborTotal').textContent = cad.format(labor.total);
+    $('estimateCombinedTotal').textContent = cad.format(materialSubtotal + labor.total);
+  }
+
   function updateMaterialTotals() {
     document.querySelectorAll('#materialLineItems .line-item-row').forEach((row) => {
       const quantity = cleanMoney(row.querySelector('.line-item-quantity').value);
@@ -873,6 +914,7 @@
     });
     const subtotal = readMaterialLineItems().reduce((sum, item) => sum + item.total, 0);
     $('materialSubtotal').textContent = cad.format(subtotal);
+    updateEstimateTotals();
   }
 
   function addMaterialLineItem(item = {}) {
@@ -910,6 +952,8 @@
   }
 
   $('addMaterialItem').addEventListener('click', () => addMaterialLineItem());
+  $('laborHours').addEventListener('input', updateEstimateTotals);
+  $('laborHourlyRate').addEventListener('input', updateEstimateTotals);
   addMaterialLineItem();
 
   function updateRecipientStatus() {
@@ -922,6 +966,8 @@
 
   function intakePayload() {
     const materialLineItems = readMaterialLineItems();
+    const materialSubtotal = Math.round(materialLineItems.reduce((sum, item) => sum + item.total, 0) * 100) / 100;
+    const laborEstimate = readLaborEstimate();
     return {
       intakeId: value('intakeId'),
       revision: value('revision') || '1',
@@ -952,11 +998,13 @@
         specifications: value('clientSpecifications'),
         materialLineItems,
         materials: formatMaterialLineItems(materialLineItems),
-        materialsSubtotal: Math.round(materialLineItems.reduce((sum, item) => sum + item.total, 0) * 100) / 100,
-        labour: value('labourPricing'),
+        materialsSubtotal: materialSubtotal,
+        laborEstimate,
+        labour: formatLaborEstimate(laborEstimate),
         allowances: value('allowances'),
         quotePending: value('quotePendingItems'),
-        pricing: value('pricingSummary'),
+        pricingNotes: value('pricingSummary'),
+        pricing: formatPricingSummary(value('pricingSummary'), materialSubtotal, laborEstimate),
         total: value('proposalTotal'),
         assumptions: value('assumptions'),
         exclusions: value('exclusions'),
@@ -998,8 +1046,8 @@
       if (!item.name) missing.push(`Material item ${index + 1} name`);
       if (!(item.quantity > 0)) missing.push(`Material item ${index + 1} quantity`);
     });
-    if (!payload.proposal.labour) missing.push('Labour pricing');
-    if (!payload.proposal.pricing) missing.push('Pricing summary');
+    if (!(payload.proposal.laborEstimate.hours > 0)) missing.push('Estimated total labour hours');
+    if (!(payload.proposal.laborEstimate.hourlyRate > 0)) missing.push('Labour rate per hour');
     if (!payload.betterProposals.templateId) missing.push('Better Proposals template ID');
     if (!health) missing.push('Completed server health check');
     if (health && health.mode === 'live' && !discoveryPassed) missing.push('Successful Better Proposals account discovery');
@@ -1046,22 +1094,12 @@
       { area: 'Site logistics', name: 'Protection, disposal, and consumables', quantity: 1, unit: 'lump sum', unitPrice: 7400 },
       { area: 'Selections', name: 'Material escalation and selection allowance', quantity: 1, unit: 'allowance', unitPrice: 12815 },
     ]);
-    $('labourPricing').value = [
-      'Site supervision, protection, demolition, and cleanup: CAD 29,500',
-      'Carpentry, cabinetry installation, and finishing: CAD 35,000',
-      'Plumbing, electrical, HVAC, tile, flooring, and painting labour: CAD 43,000',
-      'TEST LABOUR SUBTOTAL: CAD 107,500'
-    ].join('\n');
+    $('laborHours').value = '1700';
+    $('laborHourlyRate').value = '75';
+    updateEstimateTotals();
     $('allowances').value = 'Included test allowances: decorative lighting CAD 6,000; plumbing fixtures CAD 9,000; tile CAD 12,000; hardware CAD 3,000.';
     $('quotePendingItems').value = 'Pending confirmation: electrical panel capacity, slab scanning, custom shower glass, permit fees, and strata-required protection or deposits.';
-    $('pricingSummary').value = [
-      'Pre-construction and site protection: CAD 12,500',
-      'Kitchen renovation: CAD 138,000',
-      'Primary bathroom renovation: CAD 68,000',
-      'Flooring and associated finishes: CAD 41,500',
-      'Allowances and contingency: CAD 20,000',
-      'TEST BASE TOTAL: CAD 280,000 before GST'
-    ].join('\n');
+    $('pricingSummary').value = 'Dummy test estimate: 1,700 labour hours at the pre-filled CAD 75 hourly rate. Final pricing remains subject to JG review, trade quotations, selections, exclusions, and GST.';
     $('proposalTotal').value = 'CAD 280,000 before GST - TEST ONLY';
     $('assumptions').value = 'Normal weekday access; existing services can be reused where noted; no concealed hazardous materials; final selections remain within stated allowances.';
     $('exclusions').value = 'Hazardous-material abatement, structural engineering, appliance supply, strata fees, and work outside the stated rooms unless added by approved change.';
@@ -1314,7 +1352,7 @@
       if (Array.isArray(data.documentTypes)) setOptions($('documentType'), data.documentTypes, '', true);
       if (Array.isArray(data.currencies)) setOptions($('currency'), data.currencies, '', true, currencyCode);
       if (Array.isArray(data.brands)) setOptions($('brandId'), data.brands, 'Default brand', false);
-      const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','estimate_grouping','client_specifications','material_pricing','material_subtotal','labour_pricing','allowances','quote_pending_items','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
+      const requiredTags = ['project_name','site_address','client_objectives','client_constraints','proposal_summary','scope_of_work','estimate_grouping','client_specifications','material_pricing','material_subtotal','labour_pricing','labour_hours','labour_hourly_rate','labour_total','estimate_subtotal','allowances','quote_pending_items','pricing_summary','assumptions','exclusions','options','proposal_total','intake_reference'];
       const accountTags = Array.isArray(data.mergeTags) ? data.mergeTags.map((item) => mergeTagName(item, recordName(item, ''))) : [];
       const missingTags = requiredTags.filter((tag) => !accountTags.includes(tag));
       const coreListsReady = Array.isArray(data.templates) && data.templates.length > 0

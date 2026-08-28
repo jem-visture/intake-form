@@ -19,6 +19,7 @@ The intake is intentionally limited to:
 - Client objectives
 - Client constraints
 - Structured material line items with quantities, units, unit prices, and calculated totals
+- Estimated labour hours multiplied by a pre-filled CAD 75 hourly rate
 
 ## Important platform finding
 
@@ -136,7 +137,7 @@ Never commit `.env`. Vercel Functions have ephemeral local storage, so the local
 
 ## Template limitations to test
 
-The published create-proposal endpoint accepts custom merge-tag values, but it does not document dynamic pricing-table rows, dynamic image insertion, or variable page creation. Therefore, phase one keeps material rows as structured JSON, recalculates them on the server, and maps their formatted itemization plus subtotal into merge tags inside a fixed Visture template. The structured rows remain available for a future native pricing-table adapter if Better Proposals confirms a supported insertion method.
+The published create-proposal endpoint accepts custom merge-tag values, but it does not document dynamic pricing-table rows, dynamic image insertion, or variable page creation. Therefore, phase one keeps material rows and labour hours/rate as structured JSON, recalculates all totals on the server, and maps the results into a fixed Visture template. The structured rows remain available for a future native pricing-table adapter if Better Proposals confirms a supported insertion method.
 
 The live POC must answer:
 

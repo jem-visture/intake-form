@@ -215,6 +215,34 @@ function materialPricingText(items) {
   return lines.join('\n');
 }
 
+function normalizeLaborEstimate(value) {
+  const labor = value && typeof value === 'object' ? value : {};
+  const hours = Number(labor.hours);
+  const hourlyRate = Number(labor.hourlyRate);
+  if (!Number.isFinite(hours) || hours <= 0 || hours > 100000) throw new Error('Estimated total labour hours must be greater than zero.');
+  if (!Number.isFinite(hourlyRate) || hourlyRate <= 0 || hourlyRate > 10000) throw new Error('Labour rate per hour must be greater than zero.');
+  const cleanHours = Math.round(hours * 100) / 100;
+  const cleanHourlyRate = Math.round(hourlyRate * 100) / 100;
+  return {
+    hours: cleanHours,
+    hourlyRate: cleanHourlyRate,
+    total: Math.round(cleanHours * cleanHourlyRate * 100) / 100,
+  };
+}
+
+function laborPricingText(labor) {
+  return `${labor.hours} estimated hours × ${cad(labor.hourlyRate)}/hour = ${cad(labor.total)}`;
+}
+
+function pricingSummaryText(notes, materialSubtotal, labor) {
+  return [
+    `Materials subtotal: ${cad(materialSubtotal)}`,
+    `Labour: ${laborPricingText(labor)}`,
+    `MATERIALS + LABOUR SUBTOTAL: ${cad(materialSubtotal + labor.total)}`,
+    String(notes || '').trim(),
+  ].filter(Boolean).join('\n');
+}
+
 function addIfPresent(form, key, value) {
   if (value !== undefined && value !== null && String(value).trim() !== '') {
     form.append(key, String(value));
@@ -239,6 +267,7 @@ function buildMergeTags(body) {
   const proposal = body.proposal || {};
   const materialLineItems = normalizeMaterialLineItems(proposal.materialLineItems);
   const materialSubtotal = materialLineItems.reduce((sum, item) => sum + item.total, 0);
+  const labor = normalizeLaborEstimate(proposal.laborEstimate);
   const mapping = {
     project_name: project.name,
     site_address: project.siteAddress,
@@ -250,10 +279,14 @@ function buildMergeTags(body) {
     client_specifications: proposal.specifications,
     material_pricing: materialPricingText(materialLineItems),
     material_subtotal: cad(materialSubtotal),
-    labour_pricing: proposal.labour,
+    labour_pricing: laborPricingText(labor),
+    labour_hours: labor.hours,
+    labour_hourly_rate: cad(labor.hourlyRate),
+    labour_total: cad(labor.total),
+    estimate_subtotal: cad(materialSubtotal + labor.total),
     allowances: proposal.allowances,
     quote_pending_items: proposal.quotePending,
-    pricing_summary: proposal.pricing,
+    pricing_summary: pricingSummaryText(proposal.pricingNotes, materialSubtotal, labor),
     assumptions: proposal.assumptions,
     exclusions: proposal.exclusions,
     options: proposal.options,
@@ -315,8 +348,7 @@ function validateCreateRequest(body) {
   requiredString(body.proposal && body.proposal.scope, 'Proposal scope');
   requiredString(body.proposal && body.proposal.estimateGrouping, 'Estimate organization');
   normalizeMaterialLineItems(body.proposal && body.proposal.materialLineItems);
-  requiredString(body.proposal && body.proposal.labour, 'Labour pricing');
-  requiredString(body.proposal && body.proposal.pricing, 'Pricing summary');
+  normalizeLaborEstimate(body.proposal && body.proposal.laborEstimate);
   requiredString(body.betterProposals && body.betterProposals.templateId, 'Better Proposals template ID');
   return recipientEmail;
 }
@@ -332,8 +364,9 @@ async function discoverBetterProposals() {
       mergeTags: [
         'project_name', 'site_address', 'client_objectives', 'client_constraints',
         'proposal_summary', 'scope_of_work', 'estimate_grouping', 'client_specifications',
-        'material_pricing', 'material_subtotal', 'labour_pricing', 'allowances', 'quote_pending_items',
-        'pricing_summary', 'assumptions', 'exclusions', 'options', 'proposal_total',
+        'material_pricing', 'material_subtotal', 'labour_pricing', 'labour_hours',
+        'labour_hourly_rate', 'labour_total', 'estimate_subtotal', 'allowances',
+        'quote_pending_items', 'pricing_summary', 'assumptions', 'exclusions', 'options', 'proposal_total',
         'intake_reference',
       ].map((tag) => ({ tag, name: tag })),
       settings: { note: 'Mock mode: add a real API token in .env to query the account.' },

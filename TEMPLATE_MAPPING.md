@@ -29,6 +29,10 @@
 | Detailed pricing | `{{material_pricing}}` | Approved material quantities and pricing |
 | Detailed pricing total | `{{material_subtotal}}` | Server-calculated material subtotal |
 | Detailed pricing | `{{labour_pricing}}` | Approved labour hours, rates, and pricing |
+| Labour detail | `{{labour_hours}}` | Estimated total labour hours |
+| Labour detail | `{{labour_hourly_rate}}` | Approved hourly labour rate |
+| Labour total | `{{labour_total}}` | Server-calculated labour total |
+| Estimate total | `{{estimate_subtotal}}` | Server-calculated materials-plus-labour subtotal |
 | Commercial section | `{{allowances}}` | Approved selection allowances |
 | Commercial section | `{{quote_pending_items}}` | Trade or supplier quotes still required |
 | Pricing section | `{{pricing_summary}}` | Approved pricing text |
@@ -44,9 +48,9 @@ Recipient name and email should be sent through the Better Proposals `Contacts` 
 
 ## Phase-one pricing design
 
-The intake form stores each material as a structured row containing area, item name, quantity, unit, unit price, and calculated total. The server validates and recalculates every row rather than trusting browser totals.
+The intake form stores each material as a structured row containing area, item name, quantity, unit, unit price, and calculated total. Labour is estimated as total hours multiplied by an hourly rate pre-filled at CAD 75. The server validates and recalculates every material row, the labour total, and the combined estimate rather than trusting browser totals.
 
-Use `{{material_pricing}}` for the generated multiline itemization and `{{material_subtotal}}` for its calculated total. Use `{{labour_pricing}}`, `{{allowances}}`, `{{quote_pending_items}}`, and `{{pricing_summary}}` for the other initial connection-test sections. This proves that the approved estimate categories can reach the proposal without depending on undocumented dynamic pricing-table behavior.
+Use `{{material_pricing}}` for the generated multiline itemization and `{{material_subtotal}}` for its calculated total. Use `{{labour_pricing}}`, `{{labour_hours}}`, `{{labour_hourly_rate}}`, `{{labour_total}}`, and `{{estimate_subtotal}}` for calculated labour and combined totals. `{{pricing_summary}}` includes those calculated values plus any additional pricing notes. This proves that the approved estimate categories can reach the proposal without depending on undocumented dynamic pricing-table behavior.
 
 After that works, test whether Better Proposals can reliably support:
 

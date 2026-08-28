@@ -22,6 +22,7 @@ Pass condition: the Visture template and required account settings can be select
 
 - [ ] Select `Fill form with dummy data` and confirm all required intake and proposal content is populated.
 - [ ] Confirm the dummy material rows show plausible quantities, unit prices, line totals, and a CAD 152,500 material subtotal.
+- [ ] Confirm 1,700 dummy labour hours at CAD 75/hour produce a CAD 127,500 labour total and CAD 280,000 combined subtotal.
 - [ ] Add, edit, and remove a material row; confirm its line total and subtotal recalculate immediately.
 - [ ] Select the Visture template and settings.
 - [ ] Confirm the entered test recipient email is correct.
@@ -48,6 +49,7 @@ Pass condition: exactly one unsent Better Proposals draft exists for the test re
 - [ ] Confirm the selected estimate organization is shown.
 - [ ] Confirm client-visible specifications are clear and persuasive.
 - [ ] Confirm material and labour pricing appear separately.
+- [ ] Confirm the labour hours, CAD 75 hourly rate, labour total, and combined estimate are correct in the pricing summary.
 - [ ] Confirm every material description, quantity, unit, unit price, line total, and subtotal matches the intake form.
 - [ ] Confirm allowances and quote-pending items are clearly identified.
 - [ ] Confirm pricing and total.

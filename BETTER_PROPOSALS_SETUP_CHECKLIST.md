@@ -35,6 +35,10 @@ Create these under `Settings > Setup > Custom Merge Tags` and place them in the 
 - [ ] `material_pricing`
 - [ ] `material_subtotal`
 - [ ] `labour_pricing`
+- [ ] `labour_hours`
+- [ ] `labour_hourly_rate`
+- [ ] `labour_total`
+- [ ] `estimate_subtotal`
 - [ ] `allowances`
 - [ ] `quote_pending_items`
 - [ ] `pricing_summary`

@@ -64,6 +64,8 @@ async function main() {
     const sample = JSON.parse(fs.readFileSync(path.join(ROOT, 'sample-create-draft-request.json'), 'utf8'));
     const materialSubtotal = sample.proposal.materialLineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
     assert(materialSubtotal === 152500, 'Dummy material line items should total CAD 152,500.');
+    assert(sample.proposal.laborEstimate.hours * sample.proposal.laborEstimate.hourlyRate === 127500, 'Dummy labour should total CAD 127,500.');
+    assert(materialSubtotal + (sample.proposal.laborEstimate.hours * sample.proposal.laborEstimate.hourlyRate) === 280000, 'Dummy materials and labour should total CAD 280,000.');
     sample.betterProposals.templateId = 'MOCK-TEMPLATE-01';
     sample.intakeId = `VST-BP-TEST-${Date.now()}`;
 
@@ -95,6 +97,16 @@ async function main() {
       body: JSON.stringify(invalidQuantity),
     });
     assert(rejectedQuantity.response.status === 400, 'A zero material quantity should block draft creation.');
+
+    const invalidLabor = JSON.parse(JSON.stringify(sample));
+    invalidLabor.intakeId = `VST-BP-TEST-LABOR-${Date.now()}`;
+    invalidLabor.proposal.laborEstimate.hours = 0;
+    const rejectedLabor = await request('/api/bp/create-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(invalidLabor),
+    });
+    assert(rejectedLabor.response.status === 400, 'Zero estimated labour hours should block draft creation.');
 
     const second = await request('/api/bp/create-draft', {
       method: 'POST',
