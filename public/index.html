@@ -333,10 +333,9 @@
     .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 
     .form-start-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
       margin: 0 0 20px;
       padding: 15px 18px;
       background: #fff;
@@ -346,7 +345,7 @@
     }
 
     .form-start-actions p { margin: 0; color: var(--muted); font-size: 13px; }
-    .form-start-actions button { flex: 0 0 auto; }
+    .form-start-actions > #loadDemo { justify-self: start; }
     .test-source-control { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
     .test-source-label { flex: 0 0 auto; color: var(--charcoal); text-transform: uppercase; letter-spacing: .06em; }
     .test-source-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -420,7 +419,7 @@
     .local-agent-status { color: var(--muted); font-size: 12px; }
 
     @media (max-width: 620px) {
-      .form-start-actions { align-items: stretch; flex-direction: column; }
+      .form-start-actions > #loadDemo { width: 100%; }
       .test-source-control { align-items: stretch; flex-direction: column; }
       .test-source-dropdown { min-width: 0; width: 100%; }
       .section-head { align-items: flex-start; flex-wrap: wrap; }
