@@ -89,9 +89,10 @@ Requires Node.js 18 or newer.
 2. Set `BP_MODE=live`.
 3. Add the Better Proposals API token to `BETTER_PROPOSALS_API_TOKEN`.
 4. Keep `BP_TEMPLATE_ID=744153`, or override it only when intentionally changing the backend template.
-5. Start the server with `node server.js`.
-6. Open `http://localhost:8787`.
-7. Enter and confirm the intended test recipient email. Backend account discovery runs automatically and must pass before draft creation.
+5. Keep `BP_DOCUMENT_TYPE=1`. This is the built-in Proposals type used by template `744153`; using the name `Proposal` is ambiguous because the account also contains a custom type with that name.
+6. Start the server with `node server.js`.
+7. Open `http://localhost:8787`.
+8. Enter and confirm the intended test recipient email. Backend account discovery runs automatically and must pass before draft creation.
 
 Do not paste the API token into ChatGPT, the browser form, source code, screenshots, email, or GoHighLevel fields. Store it only in the server-side `.env` file or a secure secret manager.
 
@@ -106,6 +107,7 @@ The repository includes a Vercel Function adapter in `api/index.mjs` and routing
    - `BETTER_PROPOSALS_API_TOKEN` = the secret token
    - `BP_API_BASE` = `https://api.betterproposals.io`
    - `BP_TEMPLATE_ID` = `744153`
+   - `BP_DOCUMENT_TYPE` = `1`
 4. Apply the token to only the Vercel environments that should be allowed to access the live Better Proposals account.
 5. Deploy. The page automatically checks the server-side template and account mapping before allowing draft creation.
 
@@ -138,6 +140,18 @@ Never commit `.env`. Vercel Functions have ephemeral local storage, so the local
 - Page-level JG review records are clearly separated from Better Proposals native Manager Approval and never send a document.
 - Duplicate create requests are suppressed using an idempotency key.
 - Test records are stored locally in `data/drafts.json`.
+
+## HTML pricing-table test result
+
+A live unsent draft confirmed that Better Proposals renders HTML supplied as the `material_pricing` custom merge-tag value. A seven-row table appeared as real table markup in the document preview rather than escaped text.
+
+This is useful for presentation-only pricing, but it is not yet a production-safe variable-length pricing-table solution:
+
+- The merge-tag entry, including its JSON wrapper, must remain under the API's 1,000-character validation limit. The compact seven-row test used 987 characters.
+- The HTML table does not populate Better Proposals' native pricing-table totals, options, choices, or dashboard value.
+- Longer estimates need an agreed chunking/template strategy or a supported native pricing-table integration before rollout.
+
+The guarded reproduction utility is `scripts/create_html_table_test.js`. It refuses to create a record unless `--confirm-live-draft` is supplied. Every live run must still be shown and explicitly authorized before execution.
 
 ## Template limitations to test
 

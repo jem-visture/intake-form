@@ -39,7 +39,7 @@ const BP_CONFIG = Object.freeze({
   templateId: String(process.env.BP_TEMPLATE_ID || '744153').trim(),
   coverId: String(process.env.BP_COVER_ID || '').trim(),
   brandId: String(process.env.BP_BRAND_ID || '').trim(),
-  documentType: String(process.env.BP_DOCUMENT_TYPE || 'Proposal').trim(),
+  documentType: String(process.env.BP_DOCUMENT_TYPE || '1').trim(),
   currency: String(process.env.BP_CURRENCY || 'cad').trim().toLowerCase(),
   taxEnabled: String(process.env.BP_TAX_ENABLED || 'true').toLowerCase() === 'true',
   taxLabel: String(process.env.BP_TAX_LABEL || 'GST').trim(),
@@ -325,7 +325,7 @@ function buildCreateForm(body) {
   form.append('Company', String(recipient.company || recipient.fullName || 'Visture POC Test'));
   addIfPresent(form, 'Cover', config.coverId);
   form.append('Template', requiredString(config.templateId, 'Better Proposals template ID'));
-  form.append('DocumentType', String(config.documentType || 'Proposal'));
+  form.append('DocumentType', String(config.documentType || '1'));
   addIfPresent(form, 'Brand', config.brandId);
   form.append('Currency', String(config.currency || 'cad').toLowerCase());
   form.append('Tax', config.taxEnabled ? '1' : '0');
@@ -401,7 +401,7 @@ async function discoverBetterProposals() {
     const result = {
       mode: 'mock',
       templates: [{ id: BP_CONFIG.templateId, name: 'Visture POC Master Proposal' }],
-      documentTypes: [{ id: 'Proposal', name: 'Proposal' }],
+      documentTypes: [{ id: '1', name: 'Proposals' }],
       currencies: [{ id: 'cad', name: 'Canadian Dollar', code: 'cad' }],
       brands: [{ id: 'MOCK-BRAND-01', name: 'Visture' }],
       mergeTags: REQUIRED_MERGE_TAGS.map((tag) => ({ tag, name: tag })),
